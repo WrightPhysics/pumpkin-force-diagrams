@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pumpkins and Force Diagrams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=STIX+Two+Text:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#E9EEF2; --sheet:#FBFCFD; --panel:#FFFFFF; --ink:#1D2833; --muted:#5A6A77;
+  --rule:#C9D3DB; --grid:#E1E8EE; --good:#2B7A4B; --warn:#A3462F; --bad:#C62828;
+  --vel:#5CB35A; --dv:#1F6B3F; --pk:#F6AE5E; --stem:#4E7D2B;
+  --f0:#2F6FB5; --f1:#C0432F; --f2:#2B8A55; --f3:#8246B5; --f4:#A87908;
+  --body:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --math:'STIX Two Text','Cambria Math','Times New Roman',serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#11171D; --sheet:#171F27; --panel:#1B242D; --ink:#E4EBF1; --muted:#9BABB7;
+    --rule:#2E3B47; --grid:#222D37; --good:#6CCB95; --warn:#F08C74; --bad:#F2766B;
+    --vel:#7FD07A; --dv:#4FA36A; --pk:#B9692B; --stem:#8DBB5E;
+    --f0:#72A9EA; --f1:#EF7B67; --f2:#5FC68D; --f3:#B88BE6; --f4:#E3B343;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11171D; --sheet:#171F27; --panel:#1B242D; --ink:#E4EBF1; --muted:#9BABB7;
+  --rule:#2E3B47; --grid:#222D37; --good:#6CCB95; --warn:#F08C74; --bad:#F2766B;
+  --vel:#7FD07A; --dv:#4FA36A; --pk:#B9692B; --stem:#8DBB5E;
+  --f0:#72A9EA; --f1:#EF7B67; --f2:#5FC68D; --f3:#B88BE6; --f4:#E3B343;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:1300px;margin:0 auto;padding:22px 20px 36px}
+h1{font-size:1.65rem;line-height:1.2;margin:0 0 12px;font-weight:700;letter-spacing:-0.01em}
+h2{font-size:1.05rem;margin:0 0 10px}
+.scn-row{display:flex;align-items:stretch;gap:8px;margin:0 0 16px;max-width:900px}
+.scn-row select{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--ink);border-radius:7px;padding:8px 10px;cursor:pointer;text-overflow:ellipsis}
+.nav-btn{flex:none;width:44px;font:inherit;font-size:1.25rem;line-height:1;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:7px;cursor:pointer}
+.nav-btn:hover:not(:disabled){background:var(--grid)}
+.nav-btn:disabled{opacity:.35;cursor:default}
+.scn-row select:focus-visible{outline:3px solid var(--f0);outline-offset:2px}
+.var-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:-6px 0 16px}
+.var-row[hidden]{display:none}
+.var-row .var-lbl{font-weight:700;margin-right:4px}
+.var-row .scn{width:auto;background:var(--panel);border-color:var(--rule)}
+/* Matches the paper worksheet: Written Description across the top, then ID | Sketch, then FBD | VAD. */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-areas:"desc desc" "id sketch" "fbd vad";gap:16px;align-items:start}
+.layout > [data-rep="sketch"]{grid-area:sketch}
+.layout > [data-rep="desc"]{grid-area:desc}
+.layout > [data-rep="id"]{grid-area:id}
+.layout > [data-rep="fbd"]{grid-area:fbd}
+.layout > [data-rep="vad"]{grid-area:vad;min-width:0}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"desc" "sketch" "id" "fbd" "vad"}}
+.rep-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.rep-head h2{margin:0}
+.hide-btn{font:inherit;font-size:.85rem;color:var(--muted);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:2px 10px;cursor:pointer}
+.hide-btn[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+.rep-hidden{margin:0;padding:28px 12px;text-align:center;color:var(--muted);border:1.5px dashed var(--rule);border-radius:8px}
+#sketch,#idg{display:block;width:100%;height:auto}
+.sk{stroke:var(--ink);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sk-fill{fill:var(--sheet)}
+.sk-hatch{stroke:var(--muted);stroke-width:1.2}
+.sk-lbl{font-family:var(--body);font-size:12.5px;fill:var(--ink)}
+.sk-on-pk{paint-order:stroke;stroke:var(--pk);stroke-width:3.5px;stroke-linejoin:round}
+.sk-note{font-family:var(--body);font-size:12.5px;fill:var(--muted);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.sk-math{font-family:var(--math);fill:var(--ink);white-space:pre}
+.sk-sys{fill:none;stroke:#C62828;stroke-width:3.5;stroke-dasharray:8 5}
+.sk-ref{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3;fill:none}
+.rope-out{stroke:#5A3A16;stroke-width:5.6;stroke-linecap:round}
+.rope-in{stroke:#D9B276;stroke-width:3.6;stroke-linecap:round}
+.rope-twist{fill:none;stroke:#8E6230;stroke-width:1.1;stroke-linecap:round}
+.rope-out.dk{stroke:#2E1B0A}
+.rope-in.dk{stroke:#8A5A2B}
+.rope-twist.dk{stroke:#4A2D12}
+.knot{fill:#D9B276;stroke:#5A3A16;stroke-width:1.1}
+.knot-twist{stroke:#8E6230;stroke-width:.8}
+.groove{fill:none;stroke:var(--muted);stroke-width:1}
+.pk-body{fill:var(--pk);stroke:var(--ink);stroke-width:2}
+.pk-rib{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-opacity:.45}
+.pk-stem{fill:none;stroke:var(--stem);stroke-width:3.5;stroke-linecap:round}
+.id-obj{fill:var(--sheet);stroke:var(--ink);stroke-width:1.6}
+.id-name{font-family:var(--body);font-size:12.5px;fill:var(--ink)}
+.id-sys{fill:none;stroke:#C62828;stroke-width:2;stroke-dasharray:7 5}
+.id-type{font-family:var(--body);font-size:12px;font-style:italic}
+.id-int{cursor:default}
+[data-f]{transition:opacity .12s}
+.dim{opacity:.15}
+.hi .id-curve{stroke-width:3.2}
+@media (prefers-reduced-motion:reduce){[data-f]{transition:none}}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:16px}
+.scn{width:100%;text-align:left;font:inherit;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+.scn:hover{background:var(--grid)}
+.scn[aria-pressed="true"]{border-color:var(--ink);background:var(--sheet)}
+.desc{margin:0 0 4px;max-width:60ch}
+.key{margin:0;color:var(--muted);font-size:.9rem}
+#fbd{display:block;width:100%;max-width:560px;margin:4px auto 0;aspect-ratio:1}
+.fbd-vec{cursor:pointer;outline:none}
+.fbd-vec.is-pending{opacity:.4}
+.fbd-vec:focus-visible .hit{stroke:var(--ink);stroke-opacity:.15}
+.note{font-size:.88rem;color:var(--muted);margin:6px 0 10px}
+.chips{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:7px;padding:6px 10px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left}
+.chip[aria-pressed="true"]{opacity:.55}
+.chip .sw{width:18px;height:5px;border-radius:3px;flex:none}
+.flbl{font-family:var(--math);font-size:1.08em}
+.flbl sub{font-size:.68em}
+.force-key{list-style:none;margin:4px 0 0;padding:10px 0 0;border-top:1px solid var(--rule);display:flex;flex-direction:column;gap:4px}
+.force-key li{line-height:1.4}
+.force-key .flbl{font-weight:700}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.vad-tools{margin-bottom:10px}
+.tools label{display:flex;gap:6px;align-items:center;cursor:pointer;font-size:.95rem}
+.anglebar{display:flex;flex-wrap:wrap;gap:10px 36px;margin-top:16px;padding:12px 16px}
+.anglebar fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px}
+.anglebar legend{float:left;font-weight:700;margin-right:6px;padding:0}
+.anglebar label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.arc{fill:none;stroke:var(--muted);stroke-width:1.5}
+.ref{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.ang{font-family:var(--body);font-size:14px;fill:var(--ink)}
+button.btn{font:inherit;font-weight:700;border-radius:7px;padding:7px 14px;cursor:pointer;border:1px solid var(--ink);background:transparent;color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--f0);outline-offset:2px}
+.canvas-wrap{position:relative}
+#vad{display:block;width:100%;height:clamp(360px,62vh,640px);background:var(--sheet);border:1px solid var(--rule);border-radius:8px;touch-action:none;user-select:none;-webkit-user-select:none}
+.grid{stroke:var(--grid);stroke-width:1;fill:none}
+.rail{stroke-width:1.5;stroke-dasharray:2 7;stroke-linecap:round;stroke-opacity:.55}
+.rail.active{stroke-opacity:1;stroke-width:2}
+.hit{stroke:transparent;stroke-width:26;stroke-linecap:round;cursor:grab}
+.handle{fill:transparent}
+.handle.free{cursor:pointer}
+.handle.locked{cursor:not-allowed}
+.vis,.vec text,.lab{pointer-events:none}
+.lab text,text.lab{paint-order:stroke;stroke:var(--sheet);stroke-width:5px;stroke-linejoin:round}
+.ring{fill:none;stroke-width:1.5;stroke-dasharray:3 3}
+.lbl{font-family:var(--math);fill:var(--ink)}
+.snap{fill:none;stroke:var(--ink);stroke-width:2}
+#hint{position:absolute;left:12px;right:12px;top:12px;margin:0;background:var(--ink);color:var(--panel);padding:8px 12px;border-radius:7px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .15s}
+#hint.show{opacity:1}
+#msg{margin:0 0 10px;max-width:70ch}
+#msg .yes{color:var(--good)}
+#msg .no{color:var(--bad)}
+@media (prefers-reduced-motion:reduce){#hint{transition:none}}
+
+/* ===== St. Andrew's + pumpkin (Halloween) theme =====
+   School colors sampled from the logo sheet: navy #111921, royal #1A47BC, steel #789EC4.
+   They stay on the page chrome only; the diagrams keep their neutral sheets and force colors. */
+:root{ --navy:#111921; --royal:#1A47BC; --steel:#789EC4; --orange:#E8731A;
+  --paper:#E6EDF5; --ink:#111921; --muted:#4D5F70; --rule:#C2D0DE; --accent:var(--royal); --head:#111921; }
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --paper:#0A1016; --sheet:#121B24; --panel:#15202B; --ink:#E6EDF4; --muted:#9DB0C2; --rule:#26384B; --accent:#86A8F5; --orange:#F39A45; --head:#05090D; }
+}
+:root[data-theme="dark"]{ --paper:#0A1016; --sheet:#121B24; --panel:#15202B; --ink:#E6EDF4; --muted:#9DB0C2; --rule:#26384B; --accent:#86A8F5; --orange:#F39A45; --head:#05090D; }
+.site-head{background:var(--head);color:#fff;border-bottom:4px solid var(--orange);position:relative;overflow:hidden}
+.head-inner{max-width:1300px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px}
+.head-text{min-width:0;flex:1}
+.eyebrow{font-family:'Teko',sans-serif;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--steel);font-size:1.2rem;line-height:1}
+.site-title{font-family:'Teko',sans-serif;font-weight:600;font-size:2.7rem;line-height:.95;margin:2px 0 0;color:#fff;letter-spacing:.01em;display:flex;align-items:center;gap:10px}
+.site-title .pk-icon{display:block;width:34px;height:34px;flex:none;margin-top:-4px}
+.bats{position:absolute;right:40px;top:8px;width:120px;height:44px;opacity:.85}
+@media (max-width:760px){.bats{display:none!important}.site-title{font-size:2.05rem}}
+.scn-row select{border:1.5px solid var(--accent)}
+.nav-btn{color:var(--accent);border:1.5px solid var(--accent);font-weight:700}
+.nav-btn:hover:not(:disabled){background:color-mix(in srgb,var(--steel) 22%,transparent)}
+.hide-btn{color:var(--accent);border-color:var(--accent)}
+.hide-btn[aria-pressed="true"]{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+button.btn{color:var(--accent);border-color:var(--accent)}
+button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-color:var(--accent)}
+.rep-head h2{border-left:4px solid var(--accent);padding-left:8px;line-height:1.2}
+.rep-hidden::before{content:"";display:block;width:30px;height:36px;margin:0 auto 6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 40'%3E%3Cpath d='M17 2C8.5 2 3 8.5 3 17v20l4.7-4 4.6 4 4.7-4 4.7 4 4.6-4 4.7 4V17C31 8.5 25.5 2 17 2Z' fill='%23F4F7FB' stroke='%23789EC4' stroke-width='2' stroke-linejoin='round'/%3E%3Cellipse cx='12.5' cy='16' rx='2.4' ry='3.2' fill='%23111921'/%3E%3Cellipse cx='21.5' cy='16' rx='2.4' ry='3.2' fill='%23111921'/%3E%3Cellipse cx='17' cy='24' rx='3' ry='2' fill='%23111921'/%3E%3C/svg%3E") center/contain no-repeat}
+</style>
+</head>
+<body>
+<header class="site-head">
+  <svg class="bats" viewBox="0 0 120 44" aria-hidden="true" fill="#789EC4">
+    <path d="M4 18c4-4 9-4 12 0 1-3 3-4 4-4s3 1 4 4c3-4 8-4 12 0-4 0-6 3-7 6-3-3-6-3-9 0-3-3-6-3-9 0-1-3-3-6-7-6Z"/><path transform="translate(70 4) scale(.7)" d="M4 18c4-4 9-4 12 0 1-3 3-4 4-4s3 1 4 4c3-4 8-4 12 0-4 0-6 3-7 6-3-3-6-3-9 0-3-3-6-3-9 0-1-3-3-6-7-6Z"/><path transform="translate(48 22) scale(.55)" d="M4 18c4-4 9-4 12 0 1-3 3-4 4-4s3 1 4 4c3-4 8-4 12 0-4 0-6 3-7 6-3-3-6-3-9 0-3-3-6-3-9 0-1-3-3-6-7-6Z"/>
+  </svg>
+  <div class="head-inner">
+    <div class="head-text">
+      <div class="eyebrow">St. Andrew’s Advanced Physics</div>
+      <h1 class="site-title">
+        <svg class="pk-icon" viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="24" rx="17" ry="13" fill="#F39A45" stroke="#7A3A0A" stroke-width="1.6"/><ellipse cx="20" cy="24" rx="7" ry="13" fill="none" stroke="#7A3A0A" stroke-opacity=".55" stroke-width="1.3"/><ellipse cx="20" cy="24" rx="13" ry="13" fill="none" stroke="#7A3A0A" stroke-opacity=".4" stroke-width="1.2"/><path d="M19 11.5Q19 6 24 4" fill="none" stroke="#6FA83E" stroke-width="3.2" stroke-linecap="round"/></svg>
+        Pumpkins and Force Diagrams
+      </h1>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+  <nav class="scn-row" aria-label="Scenario">
+    <button class="nav-btn" id="prev" aria-label="Previous scenario" title="Previous scenario">←</button>
+    <select id="scns" aria-label="Choose a scenario"></select>
+    <button class="nav-btn" id="next" aria-label="Next scenario" title="Next scenario">→</button>
+  </nav>
+  <div class="var-row" id="vars" role="group" hidden></div>
+
+  <div class="layout">
+    <section class="panel rep" data-rep="desc" aria-labelledby="desc-h">
+      <div class="rep-head"><h2 id="desc-h">Written Description</h2><button class="hide-btn" aria-pressed="false">Hide</button></div>
+      <div class="rep-body">
+        <p class="desc" id="desc"></p>
+        <p class="key" id="key"></p>
+      </div>
+      <p class="rep-hidden" hidden>Hidden. Write it from the other representations.</p>
+    </section>
+    <section class="panel rep" data-rep="id" aria-labelledby="id-h">
+      <div class="rep-head"><h2 id="id-h">Interaction Diagram (ID)</h2><button class="hide-btn" aria-pressed="true">Show</button></div>
+      <div class="rep-body" hidden>
+        <svg id="idg" viewBox="0 0 360 270" role="img" aria-label="Interaction diagram"></svg>
+        <p class="note">Each interaction that crosses the dashed system boundary is one force on the free body diagram.</p>
+        <p class="note" id="rope-note" hidden>There is not a field interaction between Earth and the rope because we need to treat our ropes as so light that they are essentially “massless” right now, thus not affected by Earth’s gravitational field.</p>
+      </div>
+      <p class="rep-hidden">Hidden. Draw it from the other representations.</p>
+    </section>
+    <section class="panel rep" data-rep="sketch" aria-labelledby="sk-h">
+      <div class="rep-head"><h2 id="sk-h">Sketch</h2><button class="hide-btn" aria-pressed="false">Hide</button></div>
+      <div class="rep-body"><svg id="sketch" viewBox="0 0 320 220" role="img" aria-label="Annotated sketch of the situation"></svg></div>
+      <p class="rep-hidden" hidden>Hidden. Sketch it from the other representations.</p>
+    </section>
+    <section class="panel rep" data-rep="fbd" aria-labelledby="fbd-h">
+      <div class="rep-head"><h2 id="fbd-h">Free Body Diagram (FBD)</h2><button class="hide-btn" aria-pressed="true">Show</button></div>
+      <div class="rep-body" hidden>
+        <svg id="fbd" viewBox="-200 -200 400 400" role="group" aria-label="Free body diagram"></svg>
+        <p class="note">Click a force to bring it to the vector addition diagram. Until then its arrow shows direction only; once it’s in the VAD, its length here matches the VAD.</p>
+        <ul class="force-key" id="force-key" aria-label="What each force label means"></ul>
+      </div>
+      <p class="rep-hidden">Hidden. Draw it from the other representations.</p>
+    </section>
+    <section class="panel rep" data-rep="vad" aria-labelledby="vad-h">
+      <div class="rep-head"><h2 id="vad-h">Force Vector Addition Diagram (VAD)</h2><button class="hide-btn" aria-pressed="true">Show</button></div>
+      <div class="rep-body" hidden>
+        <div class="tools vad-tools">
+          <label><input type="checkbox" id="rails"> Show lines of action</label>
+          <button class="btn" id="restart">Start over</button>
+        </div>
+        <p id="msg" aria-live="polite"></p>
+        <ul class="chips" id="chips" aria-label="Forces: click to add or remove"></ul>
+        <div class="canvas-wrap">
+          <svg id="vad" aria-label="Vector addition diagram workspace"></svg>
+          <p id="hint" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <p class="rep-hidden">Hidden. Draw it from the free body diagram.</p>
+    </section>
+  </div>
+
+  <div class="anglebar panel">
+    <fieldset>
+      <legend>Angle Annotations</legend>
+      <label><input type="checkbox" data-ang="h"> From horizontal</label>
+      <label><input type="checkbox" data-ang="v"> From vertical</label>
+      <label><input type="checkbox" data-ang="b"> Between arrows</label>
+    </fieldset>
+    <fieldset>
+      <legend>Show them on</legend>
+      <label><input type="checkbox" data-on="angFBD" checked> Free body diagram</label>
+      <label><input type="checkbox" data-on="angVAD" checked> Vector addition diagram</label>
+    </fieldset>
+  </div>
+</div>
+
+<script>
+const G_LEN = 4;        // grid squares: the gravitational force has this fixed length, the reference for the others
+const START_LEN = 2;    // grid squares: starting length of every other force
+const CLOSE_TOL = 0.25; // grid units: a VAD this close to its start counts as ending where it started
+const MSG_BALANCED = 'When these force vectors are added head to tail, the diagram ends where it started, so the <strong>result of all the forces exerted on the pumpkin</strong> is <span class="yes">“<strong>nothing</strong>.”</span>';
+const MSG_UNBALANCED = 'When these force vectors are added head to tail, the diagram doesn’t end where it started, so the <strong>result of all the forces exerted on the pumpkin</strong> is <span class="no"><strong>NOT</strong> “<strong>nothing</strong>.”</span>';
+
+// Interaction diagram layouts shared by several scenarios.
+const ID_LEVEL2 = { sys:"P",
+  objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, G:{name:"Ground (G)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
+  ints:[{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"G",b:"P",type:"compression",f:1,bend:20},{a:"E",b:"G",type:"field",bend:-20}] };
+const ID_HILL2 = { sys:"P",
+  objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, H:{name:"Hill (H)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
+  ints:[{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"H",b:"P",type:"compression",f:1,bend:20},{a:"E",b:"H",type:"field",bend:-20}] };
+
+const SCN = [
+  { name:"Pumpkin is motionless",
+    key:"P = pumpkin, G = ground, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"G",ang:90}],
+    id:ID_LEVEL2 },
+  { name:"Pumpkin is sliding at a <em>constant</em> velocity",
+    key:"P = pumpkin, G = ground, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"G",ang:90}],
+    id:ID_LEVEL2 },
+  { name:"Pumpkin is slowing down on a rough surface",
+    key:"P = pumpkin, G = ground, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
+    id:{ sys:"P",
+      objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, G:{name:"Ground (G)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
+      ints:[{a:"G",b:"P",type:"compression",f:1,bend:-34},{a:"G",b:"P",type:"shear",f:2,bend:34},{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"E",b:"G",type:"field",bend:-20}] } },
+  { name:"Pumpkin is sliding down a smooth hill",
+    key:"P = pumpkin, H = hill, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:60}],
+    id:ID_HILL2 },
+  { name:"Pumpkin is at rest on a rough hill",
+    key:"P = pumpkin, H = hill, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:60},{t:"f",on:"P",by:"H",ang:150}],
+    id:{ sys:"P",
+      objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, H:{name:"Hill (H)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
+      ints:[{a:"H",b:"P",type:"compression",f:1,bend:-34},{a:"H",b:"P",type:"shear",f:2,bend:34},{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"E",b:"H",type:"field",bend:-20}] } },
+  { name:"Pumpkin is hanging from a rope",
+    key:"P = pumpkin, R = rope, C = ceiling, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"R",ang:90}],
+    id:{ sys:"P",
+      objs:{ C:{name:"Ceiling (C)",x:90,y:38}, R:{name:"Rope (R)",x:90,y:135}, P:{name:"Pumpkin (P)",x:90,y:228}, E:{name:"Earth (E)",x:270,y:135} },
+      ints:[{a:"R",b:"P",type:"extension",f:1,bend:0},{a:"C",b:"R",type:"extension",bend:0},{a:"E",b:"P",type:"field",f:0,bend:-20},{a:"E",b:"C",type:"field",bend:20}] } },
+  { name:"Pumpkin is hanging by two ropes",
+    key:"P = pumpkin, L = left rope, R = right rope, C = ceiling, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"L",ang:120},{t:"T",on:"P",by:"R",ang:30}],
+    id:{ sys:"P",
+      objs:{ C:{name:"Ceiling (C)",x:180,y:32}, L:{name:"Left rope (L)",x:62,y:125}, E:{name:"Earth (E)",x:180,y:125}, R:{name:"Right rope (R)",x:298,y:125}, P:{name:"Pumpkin (P)",x:180,y:222} },
+      ints:[{a:"L",b:"P",type:"extension",f:1,bend:-34},{a:"R",b:"P",type:"extension",f:2,bend:34},{a:"C",b:"L",type:"extension",bend:22},{a:"C",b:"R",type:"extension",bend:-22},
+            {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"C",type:"field",bend:0}] } },
+  { name:"Pumpkin is in free fall (negligible air resistance)",
+    key:"P = pumpkin, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true}],
+    id:{ sys:"P",
+      objs:{ P:{name:"Pumpkin (P)",x:180,y:70}, E:{name:"Earth (E)",x:180,y:205} },
+      ints:[{a:"E",b:"P",type:"field",f:0,bend:0}] } },
+  { name:"Pumpkin is at rest",
+    toggle:"Hill surface",
+    key:"P = pumpkin, H = hill, B = block, E = Earth",
+    vars:[
+      { label:"Smooth hill", rough:false,
+        forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:120},{t:"N",on:"P",by:"B",ang:30}],
+        id:{ sys:"P",
+          objs:{ P:{name:"Pumpkin (P)",x:95,y:120}, B:{name:"Block (B)",x:275,y:40}, H:{name:"Hill (H)",x:275,y:185}, E:{name:"Earth (E)",x:110,y:240} },
+          ints:[{a:"H",b:"P",type:"compression",f:1,bend:20},{a:"B",b:"P",type:"compression",f:2,bend:20},{a:"B",b:"H",type:"compression",bend:0},
+                {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:20}] } },
+      { label:"Rough hill", rough:true,
+        forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:120},{t:"N",on:"P",by:"B",ang:30},{t:"f",on:"P",by:"H",ang:30}],
+        id:{ sys:"P",
+          objs:{ P:{name:"Pumpkin (P)",x:95,y:120}, B:{name:"Block (B)",x:275,y:40}, H:{name:"Hill (H)",x:275,y:185}, E:{name:"Earth (E)",x:110,y:240} },
+          ints:[{a:"H",b:"P",type:"compression",f:1,bend:-30},{a:"H",b:"P",type:"shear",f:3,bend:30},{a:"B",b:"P",type:"compression",f:2,bend:20},{a:"B",b:"H",type:"compression",bend:0},
+                {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:20}] } } ] },
+  { name:"Pumpkin is pulled upward, using a rope on a pulley, at a <em>constant</em> velocity",
+    key:"P = pumpkin, R = rope, W = pulley, C = ceiling, H = Headless Horseman, G = ground, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"R",ang:90}],
+    id:{ sys:"P",
+      objs:{ C:{name:"Ceiling (C)",x:296,y:30}, W:{name:"Pulley (W)",x:175,y:30}, R:{name:"Rope (R)",x:70,y:118}, P:{name:"Pumpkin (P)",x:70,y:226},
+             H:{name:"Horseman (H)",x:250,y:128}, G:{name:"Ground (G)",x:300,y:232}, E:{name:"Earth (E)",x:172,y:236} },
+      ints:[{a:"R",b:"P",type:"extension",f:1,bend:0},{a:"W",b:"R",type:"compression",bend:-18},{a:"C",b:"W",type:"extension",bend:0},{a:"R",b:"H",type:"extension",bend:14},
+            {a:"H",b:"G",type:"compression",bend:0},{a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:-18},{a:"E",b:"G",type:"field",bend:0}] } },
+  { num:"11a", name:"Pumpkin is sliding up a smooth hill, slowing down",
+    key:"P = pumpkin, H = hill, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:120}],
+    id:ID_HILL2 },
+  { num:"11b", name:"Pumpkin is falling at a <em>constant</em> velocity (air resistance is not negligible)",
+    key:"P = pumpkin, A = air, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"D",on:"P",by:"A",ang:90}],
+    id:{ sys:"P",
+      objs:{ P:{name:"Pumpkin (P)",x:110,y:75}, A:{name:"Air (A)",x:285,y:95}, E:{name:"Earth (E)",x:160,y:225} },
+      ints:[{a:"A",b:"P",type:"compression",f:1,bend:-20},{a:"E",b:"P",type:"field",f:0,bend:0}] } },
+  { num:"11c", name:"Pumpkin is held at rest against a rough wall",
+    key:"P = pumpkin, H = Headless Horseman, W = wall, G = ground, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"P",on:"P",by:"H",ang:0},{t:"N",on:"P",by:"W",ang:180},{t:"f",on:"P",by:"W",ang:90}],
+    id:{ sys:"P",
+      objs:{ H:{name:"Horseman (H)",x:68,y:110}, P:{name:"Pumpkin (P)",x:190,y:110}, W:{name:"Wall (W)",x:310,y:110}, G:{name:"Ground (G)",x:68,y:232}, E:{name:"Earth (E)",x:230,y:232} },
+      ints:[{a:"H",b:"P",type:"compression",f:1,bend:0},{a:"W",b:"P",type:"compression",f:2,bend:-28},{a:"W",b:"P",type:"shear",f:3,bend:28},
+            {a:"E",b:"P",type:"field",f:0,bend:0},{a:"G",b:"H",type:"compression",bend:-22},{a:"G",b:"H",type:"shear",bend:22},
+            {a:"E",b:"H",type:"field",bend:30},{a:"E",b:"G",type:"field",bend:0}] } },
+  { num:"11d", name:"Pumpkin is pulled across rough ground and speeds up",
+    key:"P = pumpkin, R = rope, H = Headless Horseman, G = ground, E = Earth",
+    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"R",ang:30},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
+    id:{ sys:"P",
+      objs:{ P:{name:"Pumpkin (P)",x:70,y:85}, R:{name:"Rope (R)",x:180,y:35}, H:{name:"Horseman (H)",x:290,y:85}, G:{name:"Ground (G)",x:180,y:165}, E:{name:"Earth (E)",x:180,y:248} },
+      ints:[{a:"R",b:"P",type:"extension",f:1,bend:16},{a:"R",b:"H",type:"extension",bend:-16},
+            {a:"G",b:"P",type:"compression",f:2,bend:-22},{a:"G",b:"P",type:"shear",f:3,bend:22},
+            {a:"G",b:"H",type:"compression",bend:22},{a:"G",b:"H",type:"shear",bend:-22},
+            {a:"E",b:"P",type:"field",f:0,bend:-55},{a:"E",b:"H",type:"field",bend:55},{a:"E",b:"G",type:"field",bend:0}] } }
+];
+
+const $ = s => document.querySelector(s);
+const vad = $('#vad'), fbd = $('#fbd');
+let si = 0, vi = 0;
+const st = { placed:new Map(), rails:false, ang:{ h:false, v:false, b:false }, angFBD:true, angVAD:true };
+let drag = null, snapPt = null, S = 40, CX = 0, CY = 0, lastTap = {}, hintTimer = null;
+
+const sc = () => { const s = SCN[si]; return s.vars ? { ...s, ...s.vars[vi] } : s; };
+const F = i => sc().forces[i];
+const known = f => !!f.fix;
+const dir = f => { const a = f.ang*Math.PI/180; return [Math.cos(a), Math.sin(a)]; };
+const sub = f => f.t + f.on + f.by;
+const tipOf = p => { const u = dir(F(p.id)); return [p.x+u[0]*p.len, p.y+u[1]*p.len]; };
+const P = (x,y) => [CX + x*S, CY - y*S];
+const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
+const r1 = n => n.toFixed(1);
+
+const svgLabel = (f,x,y,anchor,size,col) =>
+  `<text class="lbl"${col?` style="fill:${col}"`:''} x="${r1(x)}" y="${r1(y)}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${size}"><tspan font-style="italic">F</tspan><tspan dy="0.32em" font-size="68%">${sub(f)}</tspan></text>`;
+const mctx = document.createElement('canvas').getContext('2d');
+const MATH = '"STIX Two Text","Cambria Math","Times New Roman",serif', BODY = '"Atkinson Hyperlegible",system-ui,sans-serif';
+const tw = (font, str) => { mctx.font = font; return mctx.measureText(str).width; };
+const htmlLabel = f => `<span class="flbl"><i>F</i><sub>${sub(f)}</sub></span>`;
+
+// Matches the TikZ `wright vector` style:
+//   head = arrows.meta ">" (To) tip, length 7×line width, width 5×line width,
+//   stroked with the shaft's own line width; round tail cap shortened by w/2,
+//   so the drawn arrow starts and ends exactly on its true coordinates.
+const HEAD_SCALE = 0.6;   // 1 = full wright vector size (7w × 5w)
+function headDims(L, w){
+  let hl = 7*w*HEAD_SCALE, hw = 2.5*w*HEAD_SCALE;
+  const k = Math.min(1, (L*0.6)/hl);   // very short vectors: scale the head down
+  return [hl*k, hw*k];
+}
+function arrow(x1,y1,x2,y2,color,w){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L;
+  const [hl, hw] = headDims(L, w);
+  const tx=x2-ux*w/2, ty=y2-uy*w/2;          // barb vertex; its round join reaches (x2,y2)
+  const sx=x1+ux*w/2, sy=y1+uy*w/2;          // round tail cap reaches (x1,y1)
+  return `<line x1="${r1(sx)}" y1="${r1(sy)}" x2="${r1(tx)}" y2="${r1(ty)}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`+
+    barbs(tx, ty, ux, uy, hl, hw, color, w);
+}
+// The two curled barbs of the `>` (To) tip, with the vertex at (tx,ty) and the arrow travelling along (ux,uy).
+function barbs(tx, ty, ux, uy, hl, hw, color, w, cls=''){
+  const nx=-uy, ny=ux;
+  const pt=(a,b)=>`${r1(tx+ux*a*hl+nx*b*hw)},${r1(ty+uy*a*hl+ny*b*hw)}`;
+  const barb=sd=>`M${pt(-1,sd)} C${pt(-0.81,0.6*sd)} ${pt(-0.3,0.2*sd)} ${r1(tx)},${r1(ty)}`;
+  return `<path class="${cls}" d="${barb(1)} ${barb(-1)}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+/* ---------- VAD links ---------- */
+function links(){
+  const m = new Map(), inc = new Map(), arr = [...st.placed.values()];
+  for (const p of arr) { const t = tipOf(p);
+    for (const q of arr) if (q.id!==p.id && !m.has(p.id) && dist(t,[q.x,q.y]) < 0.05) { m.set(p.id,q.id); inc.set(q.id,(inc.get(q.id)||0)+1); } }
+  return { m, inc };
+}
+function analyze(){
+  const arr = [...st.placed.values()], n = arr.length, sum = [0,0];
+  arr.forEach(p => { const u = dir(F(p.id)); sum[0]+=u[0]*p.len; sum[1]+=u[1]*p.len; });
+  if (!n) return { n, connected:false, sum };
+  const { m, inc } = links();
+  let start = arr.find(p => !inc.has(p.id)); if (!start) start = arr[0];
+  const order = [start.id], seen = new Set([start.id]); let j = m.get(start.id);
+  while (j != null && !seen.has(j)) { order.push(j); seen.add(j); j = m.get(j); }
+  const connected = order.length === n && [...inc.values()].every(c => c === 1);
+  return { n, connected, sum };
+}
+function downstream(id){
+  const { m } = links(), out = [], seen = new Set([id]); let j = m.get(id);
+  while (j != null && !seen.has(j)) { const q = st.placed.get(j); out.push({ id:j, x0:q.x, y0:q.y }); seen.add(j); j = m.get(j); }
+  return out;
+}
+
+/* ---------- shared label placement + angle marks ---------- */
+function makePlacer(segs, blobs, bounds, cen, boxes = []){
+  const segHitsRect = (sg, r) => {          // Liang–Barsky clip test
+    const [x1,y1] = sg[0], [x2,y2] = sg[1], dx = x2-x1, dy = y2-y1;
+    let t0 = 0, t1 = 1;
+    const P4 = [-dx, dx, -dy, dy], Q4 = [x1-r.x0, r.x1-x1, y1-r.y0, r.y1-y1];
+    for (let i = 0; i < 4; i++) {
+      if (P4[i] === 0) { if (Q4[i] < 0) return false; continue; }
+      const t = Q4[i]/P4[i];
+      if (P4[i] < 0) { if (t > t1) return false; if (t > t0) t0 = t; }
+      else { if (t < t0) return false; if (t < t1) t1 = t; }
+    }
+    return true;
+  };
+  const overlap = (r, q) => Math.max(0, Math.min(r.x1,q.x1)-Math.max(r.x0,q.x0)) * Math.max(0, Math.min(r.y1,q.y1)-Math.max(r.y0,q.y0));
+  const cost = r => {
+    const pad = { x0:r.x0-3, y0:r.y0-3, x1:r.x1+3, y1:r.y1+3 };
+    let c = 0;
+    for (const sg of segs) if (segHitsRect(sg, pad)) c += 1000;
+    for (const q of boxes) { const o = overlap({ x0:r.x0-6, y0:r.y0-6, x1:r.x1+6, y1:r.y1+6 }, q); if (o > 0) c += 3000 + o*40; }
+    for (const [bx,by,br] of blobs) {
+      const nx = Math.max(r.x0, Math.min(bx, r.x1)), ny = Math.max(r.y0, Math.min(by, r.y1));
+      if (Math.hypot(nx-bx, ny-by) < br) c += 600;
+    }
+    if (r.x0 < bounds.x0 || r.y0 < bounds.y0 || r.x1 > bounds.x1 || r.y1 > bounds.y1) c += 800;
+    return c;
+  };
+  function besideSegment(a, b, w, hh){
+    const L = Math.hypot(b[0]-a[0], b[1]-a[1]) || 1, ux = (b[0]-a[0])/L, uy = (b[1]-a[1])/L;
+    const nx = -uy, ny = ux, mid = [(a[0]+b[0])/2, (a[1]+b[1])/2];
+    const pref = ((mid[0]-cen[0])*nx + (mid[1]-cen[1])*ny) >= 0 ? 1 : -1;   // outside the polygon
+    const out = [];
+    for (const side of [pref, -pref])
+      for (const t of [0.5, 0.38, 0.62, 0.25, 0.75, 0.12, 0.88])
+        for (const off of [8, 20, 34, 52, 76]) {
+          const ext = Math.abs(nx)*w/2 + Math.abs(ny)*hh/2;
+          out.push({ cx:a[0]+ux*L*t + nx*side*(off+ext), cy:a[1]+uy*L*t + ny*side*(off+ext), pen:(side===pref?0:40) + Math.abs(t-0.5)*60 + off });
+        }
+    return out;
+  }
+  function place(cands, w, hh){
+    let best = null, bc = Infinity;
+    for (const c of cands) {
+      const r = { x0:c.cx-w/2, y0:c.cy-hh/2, x1:c.cx+w/2, y1:c.cy+hh/2 };
+      const v = cost(r) + c.pen;
+      if (v < bc) { bc = v; best = r; }
+    }
+    boxes.push(best);
+    return best;
+  }
+  return { place, besideSegment, boxes };
+}
+
+const normA = a => { while (a <= -Math.PI) a += 2*Math.PI; while (a > Math.PI) a -= 2*Math.PI; return a; };
+// Draws an angle arc (or right-angle square) at c between screen angles th0 and th1.
+// out = { svg, segs, labels } collects the drawing, obstacles, and label requests.
+function angleMark(out, c, th0, th1, deg, r, fs){
+  const delta = normA(th1 - th0);
+  if (Math.abs(90 - deg) < 0.5) {
+    const q = r*0.42, a = [Math.cos(th0), Math.sin(th0)], b = [Math.cos(th1), Math.sin(th1)];
+    const p1 = [c[0]+a[0]*q, c[1]+a[1]*q], p2 = [p1[0]+b[0]*q, p1[1]+b[1]*q], p3 = [c[0]+b[0]*q, c[1]+b[1]*q];
+    out.svg += `<path class="arc vis" d="M${r1(p1[0])},${r1(p1[1])} L${r1(p2[0])},${r1(p2[1])} L${r1(p3[0])},${r1(p3[1])}"/>`;
+    out.segs.push([p1,p2],[p2,p3]);
+    return;
+  }
+  const pA = [c[0]+r*Math.cos(th0), c[1]+r*Math.sin(th0)], pB = [c[0]+r*Math.cos(th1), c[1]+r*Math.sin(th1)];
+  out.svg += `<path class="arc vis" d="M${r1(pA[0])},${r1(pA[1])} A${r},${r} 0 0 ${delta > 0 ? 1 : 0} ${r1(pB[0])},${r1(pB[1])}"/>`;
+  let prev = pA;
+  for (let k = 1; k <= 4; k++) { const th = th0 + delta*k/4, q = [c[0]+r*Math.cos(th), c[1]+r*Math.sin(th)]; out.segs.push([prev,q]); prev = q; }
+  const thm = th0 + delta/2, text = Math.round(deg) + '°';
+  const w = tw(`${fs}px ${BODY}`, text) + 6, hh = fs + 4, cands = [];
+  for (const sh of [0, 0.2, -0.2, 0.35, -0.35]) {
+    const th = thm + sh*delta, ext = (Math.abs(Math.cos(th))*w + Math.abs(Math.sin(th))*hh)/2;
+    for (const off of [4, 10, 18, 28, 40]) {   // the far ones only win when nearer spots would overlap another label
+      const d = r + off + ext;
+      cands.push({ cx:c[0]+Math.cos(th)*d, cy:c[1]+Math.sin(th)*d, pen:off*2 + (off > 18 ? 1200 : 0) + Math.abs(sh)*60 });
+    }
+    // wide angles have room for the number just inside the arc
+    if (Math.abs(delta) > 1.0 && r - 5 - ext > 6) {
+      const d = r - 5 - ext;
+      cands.push({ cx:c[0]+Math.cos(th)*d, cy:c[1]+Math.sin(th)*d, pen:6 + Math.abs(sh)*60 });
+    }
+  }
+  out.labels.push({ cands, w, hh, text, fs });
+}
+// Angles from horizontal and/or vertical reference lines drawn from point c, for world direction u.
+function refAngles(out, c, u, r, len, fs){
+  if (st.ang.h) {
+    const deg = Math.atan2(Math.abs(u[1]), Math.abs(u[0]))*180/Math.PI;
+    if (deg >= 1 && deg <= 89) {
+      const sgn = u[0] >= 0 ? 1 : -1, e = [c[0] + sgn*len, c[1]];
+      out.svg += `<line class="ref vis" x1="${r1(c[0])}" y1="${r1(c[1])}" x2="${r1(e[0])}" y2="${r1(e[1])}"/>`;
+      out.segs.push([c, e]);
+      angleMark(out, c, sgn > 0 ? 0 : Math.PI, Math.atan2(-u[1], u[0]), deg, r, fs);
+    }
+  }
+  if (st.ang.v) {
+    const deg = Math.atan2(Math.abs(u[0]), Math.abs(u[1]))*180/Math.PI;
+    if (deg >= 1 && deg <= 89) {
+      const sv = u[1] >= 0 ? -1 : 1, e = [c[0], c[1] + sv*len];   // screen: up is -y
+      out.svg += `<line class="ref vis" x1="${r1(c[0])}" y1="${r1(c[1])}" x2="${r1(e[0])}" y2="${r1(e[1])}"/>`;
+      out.segs.push([c, e]);
+      angleMark(out, c, sv < 0 ? -Math.PI/2 : Math.PI/2, Math.atan2(-u[1], u[0]), deg, r, fs);
+    }
+  }
+}
+const angText = (r, a) => `<text class="ang lab" x="${r1((r.x0+r.x1)/2)}" y="${r1((r.y0+r.y1)/2)}" text-anchor="middle" dominant-baseline="middle" font-size="${a.fs}">${a.text}</text>`;
+
+/* ---------- annotated sketches ---------- */
+const skT = (x,y,t,cls='sk-lbl',anchor='middle') => `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${t}</text>`;
+function hatch(x1,x2,y){ let d=`M${x1},${y}H${x2}`; for (let x=x1+6; x<=x2; x+=12) d+=`M${x},${y}l-7,8`; return `<path class="sk-hatch" d="${d}"/><path class="sk" d="M${x1},${y}H${x2}"/>`; }
+function chatch(x1,x2,y){ let d=''; for (let x=x1+6; x<=x2; x+=12) d+=`M${x},${y}l7,-8`; return `<path class="sk-hatch" d="${d}"/><path class="sk" d="M${x1},${y}H${x2}"/>`; }   // ceiling
+function vhatch(x,y1,y2,side){ let d=''; for (let y=y1+6; y<=y2; y+=12) d+=`M${x},${y}l${side*8},-7`; return `<path class="sk-hatch" d="${d}"/><path class="sk" d="M${x},${y1}V${y2}"/>`; }
+function skArc(cx,cy,r,a0,a1,lab,lr,la){ // angles in screen degrees; la = optional label direction
+  const R=a=>a*Math.PI/180, p0=[cx+r*Math.cos(R(a0)),cy+r*Math.sin(R(a0))], p1=[cx+r*Math.cos(R(a1)),cy+r*Math.sin(R(a1))];
+  const am=R(la ?? (a0+a1)/2);
+  return `<path class="sk-ref" style="stroke-dasharray:none" d="M${r1(p0[0])},${r1(p0[1])} A${r},${r} 0 0 ${a1>a0?1:0} ${r1(p1[0])},${r1(p1[1])}"/>`+
+    skT(r1(cx+lr*Math.cos(am)), r1(cy+lr*Math.sin(am)+4), lab, 'sk-note');
+}
+// Math text with optional vector arrows: parts = [{t, vec?, it?}], drawn in the math font.
+function mathText(x, y, parts, anchor='middle', fs=15){
+  const fnt = it => `${it ? 'italic ' : ''}500 ${fs}px ${MATH}`;
+  const widths = parts.map(q => tw(fnt(q.it), q.t));
+  let cx = x - (anchor === 'middle' ? widths.reduce((a,b)=>a+b,0)/2 : anchor === 'end' ? widths.reduce((a,b)=>a+b,0) : 0);
+  let out = '';
+  parts.forEach((q, k) => {
+    out += `<text class="sk-math" xml:space="preserve" x="${r1(cx)}" y="${r1(y)}"${q.it ? ' font-style="italic"' : ''} font-size="${fs}">${q.t}</text>`;
+    if (q.vec) {   // small arrow over the symbol, nudged right for the italic slant
+      const x0 = cx + widths[k]*0.12, x1 = cx + widths[k]*0.98 + 1.5, ya = y - fs*0.78;
+      out += `<line x1="${r1(x0)}" y1="${r1(ya)}" x2="${r1(x1)}" y2="${r1(ya)}" stroke="var(--ink)" stroke-width="1.1" stroke-linecap="round"/>`+
+        barbs(x1, ya, 1, 0, 3.6, 2.1, 'var(--ink)', 1.1);
+    }
+    cx += widths[k];
+  });
+  return out;
+}
+const V = { t:'v', it:true, vec:true };
+const restMap = (x, y, anchor='middle') => mathText(x, y, [{t:'v', it:true}, {t:' = 0,  Δ'}, V, {t:' = 0'}], anchor);
+const zeroDv = (x, y) => mathText(x, y, [{t:'Δ'}, V, {t:' = 0'}]);
+// Motion map: dots at distances pos[] along screen angle a (degrees) from (x,y), each with a light green
+// velocity arrow of length lens[k]. Labels go on the side given by side (+1 = left of the motion).
+function mmap(x, y, a, pos, lens, side=1){
+  const u = [Math.cos(a*Math.PI/180), Math.sin(a*Math.PI/180)], n = [u[1]*side, -u[0]*side];
+  let arrows = '', dots = '', labs = '';
+  pos.forEach((s, k) => {
+    const p = [x+u[0]*s, y+u[1]*s], e = [p[0]+u[0]*lens[k], p[1]+u[1]*lens[k]];
+    arrows += arrow(p[0], p[1], e[0], e[1], 'var(--vel)', 2.4);
+    dots += `<circle cx="${r1(p[0])}" cy="${r1(p[1])}" r="3.4" fill="var(--ink)"/>`;   // dot drawn on top of its arrow
+    const m = [(p[0]+e[0])/2 + n[0]*12, (p[1]+e[1])/2 + n[1]*13];
+    labs += mathText(m[0], m[1] + 5, [V]);
+  });
+  return arrows + dots + labs;
+}
+// A TikZ -stealth tip: filled, with straight sides and a notched back (length 4.5w, width 0.75·length,
+// inset 0.325·length). Used for Δv so it reads differently from the open `wright vector` velocity arrows.
+function stealthArrow(x1, y1, x2, y2, color, w){
+  const dx = x2-x1, dy = y2-y1, L = Math.hypot(dx,dy) || 1, ux = dx/L, uy = dy/L, nx = -uy, ny = ux;
+  const hl = Math.min(4.5*w, L*0.6), hw = 0.375*hl, inset = hl*(1-0.325);
+  const P = (a, b) => `${r1(x2-ux*a+nx*b)},${r1(y2-uy*a+ny*b)}`;
+  return `<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2-ux*inset)}" y2="${r1(y2-uy*inset)}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`+
+    `<path d="M${P(0,0)} L${P(hl,hw)} L${P(inset,0)} L${P(hl,-hw)}Z" fill="${color}" stroke="${color}" stroke-width="0.8" stroke-linejoin="miter"/>`;
+}
+// A dark green Δv arrow from (x,y) along screen angle a, labeled on the given side.
+function dvArrow(x, y, a, len, side=1){
+  const u = [Math.cos(a*Math.PI/180), Math.sin(a*Math.PI/180)], n = [u[1]*side, -u[0]*side];
+  const e = [x+u[0]*len, y+u[1]*len], m = [(x+e[0])/2 + n[0]*16, (y+e[1])/2 + n[1]*14];
+  return stealthArrow(x, y, e[0], e[1], 'var(--dv)', 2.6) + mathText(m[0], m[1] + 5, [{t:'Δ'}, V]);
+}
+// A twisted rope, drawn as straight runs [x1,y1,x2,y2]: dark outline, tan core and short diagonal
+// marks for the strands. dark = true draws a dark brown rope, to tell two ropes apart (#7).
+function rope(runs, dark = false){
+  const k = dark ? ' dk' : '';
+  let out = '', core = '', marks = '';
+  runs.forEach(([x1,y1,x2,y2]) => {
+    const l = Math.hypot(x2-x1, y2-y1), u = [(x2-x1)/l, (y2-y1)/l], n = [-u[1], u[0]];
+    const seg = `x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}"`;
+    out += `<line class="rope-out${k}" ${seg}/>`; core += `<line class="rope-in${k}" ${seg}/>`;
+    for (let t = 2; t < l - 1; t += 3.4) {
+      const c = [x1 + u[0]*t, y1 + u[1]*t];
+      marks += `M${r1(c[0]+n[0]*1.8-u[0]*1.4)},${r1(c[1]+n[1]*1.8-u[1]*1.4)}L${r1(c[0]-n[0]*1.8+u[0]*1.4)},${r1(c[1]-n[1]*1.8+u[1]*1.4)}`;
+    }
+  });
+  return out + core + `<path class="rope-twist${k}" d="${marks}"/>`;
+}
+// The rope tied to the stem: two wraps of rope (a hitch) around the stem's middle at (x,y).
+function knot(x, y){
+  const wrap = dy => `<g transform="translate(${r1(x)},${r1(y+dy)}) rotate(-14)"><rect class="knot" x="-5.5" y="-1.9" width="11" height="3.8" rx="1.9"/>`+
+    `<path class="knot-twist" d="M-2.5,-1.3l1.4,2.6M0.5,-1.3l1.4,2.6"/></g>`;
+  return wrap(-2.2) + wrap(2.2);
+}
+// A rope following a quadratic curve p0 -> p1 (control c), built from short runs so the twist marks follow it.
+function ropeCurve(p0, c, p1, dark = false){
+  const runs = []; let prev = p0;
+  for (let k = 1; k <= 12; k++) {
+    const t = k/12, m = 1-t, q = [m*m*p0[0] + 2*m*t*c[0] + t*t*p1[0], m*m*p0[1] + 2*m*t*c[1] + t*t*p1[1]];
+    runs.push([prev[0], prev[1], q[0], q[1]]); prev = q;
+  }
+  return rope(runs, dark);
+}
+// Two wraps of rope across a rope at (x,y) running at screen angle rot: a knot joining two ropes.
+const ropeKnot = (x, y, rot) => [-2.2, 2.2].map(d =>
+  `<g transform="translate(${r1(x)},${r1(y)}) rotate(${rot}) translate(${d},0)"><rect class="knot" x="-1.9" y="-5.5" width="3.8" height="11" rx="1.9"/>`+
+  `<path class="knot-twist" d="M-1.3,-2.5l2.6,1.4M-1.3,0.5l2.6,1.4"/></g>`).join('');
+// Stem middle of pumpkin(x, y, w, h), where a rope is tied.
+const stemKnot = (x, y, h) => knot(x - 0.5, y - h - 3);
+const sysBox = (x, y, w, h) => `<rect class="sk-sys" x="${x}" y="${y}" width="${w}" height="${h}" rx="7"/>`;
+// Pumpkin sitting with the bottom of its body at (x,y), tilted by rot degrees. About h+10 tall with the stem.
+function pumpkin(x, y, w, h, rot=0){
+  const c = -h/2;
+  return `<g transform="translate(${r1(x)},${r1(y)}) rotate(${rot})">`+
+    `<ellipse class="pk-body" cx="0" cy="${c}" rx="${w/2}" ry="${h/2}"/>`+
+    `<ellipse class="pk-rib" cx="0" cy="${c}" rx="${r1(w*0.2)}" ry="${h/2}"/>`+
+    `<ellipse class="pk-rib" cx="0" cy="${c}" rx="${r1(w*0.38)}" ry="${h/2}"/>`+
+    `<path class="pk-stem" d="M-1,${-h+2} Q-1,${-h-6} 4,${-h-9}"/></g>`;
+}
+// System boundary for a tilted pumpkin (or anything) resting on a surface at (x,y): the bottom edge runs along the surface.
+const tiltBox = (x, y, rot, x0, w, h) => `<g transform="translate(${r1(x)},${r1(y)}) rotate(${rot})"><rect class="sk-sys" x="${x0}" y="${-h}" width="${w}" height="${h}" rx="7"/></g>`;
+function person(x, ground, hand, headless){ // stick figure, tall enough that the hand sits below the shoulder
+  return (headless ? `<path class="sk" d="M${x-7},${ground-118}H${x+7}"/>` : `<circle class="sk sk-fill" cx="${x}" cy="${ground-127}" r="9"/>`)+
+    `<path class="sk" d="M${x},${ground-118}V${ground-62} M${x},${ground-62}L${x-10},${ground} M${x},${ground-62}L${x+10},${ground} M${x},${ground-108}L${hand[0]},${hand[1]}"/>`;
+}
+const horseman = (x, y, anchor='middle') => skT(x, y, 'Headless', 'sk-lbl', anchor) + skT(x, y+14, 'Horseman (H)', 'sk-lbl', anchor);
+const pkLabel = (x, y) => skT(x, y, 'Pumpkin (P)', 'sk-lbl sk-on-pk');
+// A hill sloping down to the right (top-left corner at x0) or up to the right (top-right corner at x1), 30°, ground at y.
+const T30 = Math.tan(Math.PI/6);
+// Point on an incline that starts at (x0,y0) and runs at screen angle rot (degrees): a along the surface, off out from it.
+function slopePt(x0, y0, rot, a, off){
+  const r = rot*Math.PI/180, u = [Math.cos(r), Math.sin(r)], n = [Math.sin(r), -Math.cos(r)];
+  return [x0 + u[0]*a + n[0]*off, y0 + u[1]*a + n[1]*off];
+}
+const hillDown = (x0, x1, y) => `<path class="sk sk-fill" d="M${x0},${y}L${x1},${y}L${x0},${r1(y-(x1-x0)*T30)}Z"/>`;
+const hillUp = (x0, x1, y) => `<path class="sk sk-fill" d="M${x0},${y}L${x1},${y}L${x1},${r1(y-(x1-x0)*T30)}Z"/>`;
+
+const SKETCH = [
+  // 1. motionless on level ground
+  () => hatch(20,300,180) + pumpkin(160,180,84,52) + sysBox(109,110,102,70) + pkLabel(160,159) +
+    restMap(160,94) + skT(14,202,'Ground (G)','sk-lbl','start'),
+  // 2. sliding at constant velocity on smooth ground
+  () => hatch(10,310,180) + pumpkin(220,180,84,52) + sysBox(169,110,102,70) + pkLabel(220,159) +
+    mmap(98,74,0,[0,46,92],[32,32,32]) + zeroDv(160,42) +
+    skT(160,200,'smooth surface','sk-note') + skT(14,202,'Ground (G)','sk-lbl','start'),
+  // 3. slowing down on a rough surface
+  () => hatch(10,310,180) + pumpkin(220,180,84,52) + sysBox(169,110,102,70) + pkLabel(220,159) +
+    mmap(90,80,0,[0,54,98,130],[38,30,20,10]) + dvArrow(178,38,180,36,-1) +
+    skT(160,200,'rough surface','sk-note') + skT(14,202,'Ground (G)','sk-lbl','start'),
+  // 4. sliding down a smooth hill (slopes down to the right)
+  () => { const sy = x => 61.4 + (x-40)*T30, cx = 160, cy = sy(cx);
+    return hatch(10,310,200) + hillDown(40,280,200) +
+      pumpkin(cx,cy,64,42,30) + tiltBox(cx,cy,30,-41,82,61) +
+      mmap(...slopePt(40,61.4,30,138.6-66,76), 30, [0,26,58,98], [16,22,28,34]) + dvArrow(...slopePt(40,61.4,30,138.6-17,116), 30, 34) +
+      skT(222,134,'Pumpkin (P)','sk-lbl','start') + skT(92,188,'Hill (H)') + skT(92,172,'smooth','sk-note') +
+      skArc(280,200,40,180,210,'30°',58); },
+  // 5. at rest on a rough hill (slopes down to the right)
+  () => { const sy = x => 61.4 + (x-40)*T30, cx = 160, cy = sy(cx);
+    return hatch(10,310,200) + hillDown(40,280,200) +
+      pumpkin(cx,cy,64,42,30) + tiltBox(cx,cy,30,-41,82,61) +
+      `<g transform="translate(${slopePt(40,61.4,30,138.6,80).map(r1)}) rotate(30)">${restMap(0,0)}</g>` + skT(226,124,'Pumpkin (P)','sk-lbl','start') + skT(92,188,'Hill (H)') + skT(92,172,'rough','sk-note') +
+      skArc(280,200,40,180,210,'30°',58); },
+  // 6. hanging from one rope
+  () => chatch(100,260,30) + rope([[160,30,160,114]]) + pumpkin(160,172,84,52) + stemKnot(160,172,52) + sysBox(109,100,102,81) + pkLabel(160,151) +
+    restMap(222,112,'start') + skT(168,72,'Rope (R)','sk-lbl','start') + skT(180,16,'Ceiling (C)'),
+  // 7. hanging by two ropes: left rope 30° west of north, right rope 30° north of east
+  () => chatch(60,300,30) + rope([[139.5,111,95,30]]) + rope([[139.5,111,275.1,30]], true) +
+    pumpkin(140,170,84,52) + stemKnot(140,170,52) + sysBox(89,98,102,81) + pkLabel(140,149) +
+    `<path class="sk-ref" d="M140,108V60 M140,108H196"/>` + skArc(140,108,30,240,270,'30°',46,250) + skArc(140,108,40,-30,0,'30°',54) +
+    skT(104,62,'Left rope (L)','sk-lbl','end') + skT(232,92,'Right rope (R)','sk-lbl','start') + skT(180,16,'Ceiling (C)') +
+    restMap(140,204),
+  // 8. free fall
+  () => pumpkin(200,175,84,52) + sysBox(149,105,102,79) + pkLabel(200,154) +
+    mmap(70,22,90,[0,24,58,102],[12,22,32,42],1) + dvArrow(128,64,90,36),
+  // 9. at rest on a hill (rises to the right) against a block; smooth or rough
+  s => { const cx = 110, cy = 200 - (cx-40)*T30;
+    return hatch(10,310,200) + hillUp(40,280,200) +
+      `<g transform="translate(${r1(cx)},${r1(cy)}) rotate(-30)"><rect class="sk sk-fill" x="-16" y="-46" width="16" height="46" rx="2"/>${pumpkin(32,0,64,42)}`+
+      `<rect class="sk-sys" x="0" y="-61" width="73" height="61" rx="7"/></g>` +
+      restMap(150,34) + skT(162,70,'Pumpkin (P)','sk-lbl','start') + skT(66,122,'Block (B)','sk-lbl','end') +
+      skT(240,188,'Hill (H)') + skT(240,172,s.rough ? 'rough' : 'smooth','sk-note') +
+      skArc(40,200,40,-30,0,'30°',58); },
+  // 10. pulled up over a pulley at constant velocity by the Headless Horseman
+  () => chatch(160,262,22) + `<path class="sk" d="M212,22V60"/>` +
+    rope([[188,126,188,60],[236,60,236,130]]) +   // the wrap around the wheel is hidden in its groove
+    `<circle class="sk sk-fill" cx="212" cy="60" r="27"/><circle class="groove" cx="212" cy="60" r="22"/><circle cx="212" cy="60" r="3" fill="var(--ink)"/>` +
+    person(280,196,[236,130],true) + hatch(10,310,196) +
+    pumpkin(188,176,64,44) + stemKnot(188,176,44) + sysBox(147,112,80,73) + skT(140,160,'Pumpkin (P)','sk-lbl','end') +
+    mmap(50,182,-90,[0,46,92],[32,32,32]) + zeroDv(50,32) +
+    skT(180,100,'Rope (R)','sk-lbl','end') + skT(180,64,'Pulley (W)','sk-lbl','end') + skT(156,20,'Ceiling (C)','sk-lbl','end') +
+    horseman(318,50,'end') + skT(14,218,'Ground (G)','sk-lbl','start'),
+  // 11. sliding up a smooth hill (rises to the right), slowing down
+  () => { const sy = x => 200 - (x-40)*T30, cx = 160, cy = sy(cx);
+    return hatch(10,310,200) + hillUp(40,280,200) +
+      pumpkin(cx,cy,64,42,-30) + tiltBox(cx,cy,-30,-41,82,61) +
+      mmap(...slopePt(40,200,-30,138.6-53,76), -30, [0,40,72,96], [34,26,18,10]) + dvArrow(...slopePt(40,200,-30,138.6+18,116), 150, 36, -1) +
+      skT(204,52,'Pumpkin (P)','sk-lbl','start') + skT(240,188,'Hill (H)') + skT(240,172,'smooth','sk-note') +
+      skArc(40,200,40,-30,0,'30°',58); },
+  // 12. falling at constant velocity with air resistance
+  () => pumpkin(200,175,84,52) + sysBox(149,105,102,79) + pkLabel(200,154) +
+    mmap(70,34,90,[0,46,92],[32,32,32],1) + zeroDv(70,20) +
+    skT(268,60,'Air (A)'),
+  // 13. held at rest against a rough wall by the Headless Horseman's push
+  () => hatch(10,250,200) + vhatch(250,14,200,1) +
+    person(110,200,[178,92],true) + pumpkin(214,116,72,48) + sysBox(169,50,81,75) + skT(214,144,'Pumpkin (P)') +
+    restMap(200,34) + horseman(100,54) +
+    skT(288,30,'Wall (W)') + skT(288,46,'rough','sk-note') + skT(14,218,'Ground (G)','sk-lbl','start'),
+  // 14. pulled across rough ground by a rope at 30°, speeding up
+  // The rope loops around the pumpkin's middle (front half shown) and is knotted at (116,155) to the run at 30°.
+  () => hatch(10,310,180) + pumpkin(80,180,72,48) + sysBox(35,113,90,67) +
+    ropeCurve([44.5,151],[80,171],[116,155]) + ropeKnot(117,154.5,-30) +
+    rope([[118,154,211,100.2]]) + person(224,180,[211,100.2],true) +
+    `<path class="sk-ref" d="M116,155H164"/>` + skArc(116,155,36,-30,0,'30°',50) +
+    mmap(20,62,0,[0,26,60,104],[18,26,34,42]) + dvArrow(64,24,0,34) +
+    skT(74,106,'Pumpkin (P)') + skT(170,108,'Rope (R)','sk-lbl','end') + horseman(236,102,'start') +
+    skT(160,198,'rough surface','sk-note') + skT(14,202,'Ground (G)','sk-lbl','start')
+];
+function renderSketch(){ $('#sketch').innerHTML = SKETCH[si](sc()); }
+
+/* ---------- interaction diagram ---------- */
+function renderID(){
+  const D = sc().id, svg = $('#idg');
+  const O = {};
+  for (const [k,o] of Object.entries(D.objs)) O[k] = { ...o, rx:Math.max(34, tw(`12.5px ${BODY}`, o.name)/2 + 13), ry:17 };
+  const bez = (c,t) => { const m=1-t; return [m*m*m*c[0][0]+3*m*m*t*c[1][0]+3*m*t*t*c[2][0]+t*t*t*c[3][0], m*m*m*c[0][1]+3*m*m*t*c[1][1]+3*m*t*t*c[2][1]+t*t*t*c[3][1]]; };
+  const segs = [], boxes = [], blobs = [];
+  for (const o of Object.values(O)) boxes.push({ x0:o.x-o.rx, y0:o.y-o.ry, x1:o.x+o.rx, y1:o.y+o.ry });
+  const sysO = O[D.sys], srx = sysO.rx + 9, sry = sysO.ry + 9;
+  for (let k = 0; k < 24; k++) {
+    const a0 = k/24*2*Math.PI, a1 = (k+1)/24*2*Math.PI;
+    segs.push([[sysO.x+srx*Math.cos(a0), sysO.y+sry*Math.sin(a0)], [sysO.x+srx*Math.cos(a1), sysO.y+sry*Math.sin(a1)]]);
+  }
+  let curves = '', labels = [];
+  D.ints.forEach(it => {
+    const A = O[it.a], B = O[it.b];
+    const dx = B.x-A.x, dy = B.y-A.y, L = Math.hypot(dx,dy);
+    const px = -dy/L, py = dx/L, aim = [(A.x+B.x)/2 + px*it.bend, (A.y+B.y)/2 + py*it.bend];
+    const end = (Ob) => {   // point on the oval facing the aim point, with its outward normal
+      const t = Math.atan2((aim[1]-Ob.y)/Ob.ry, (aim[0]-Ob.x)/Ob.rx);
+      const pnt = [Ob.x+Ob.rx*Math.cos(t), Ob.y+Ob.ry*Math.sin(t)];
+      const n = [Math.cos(t)/Ob.rx, Math.sin(t)/Ob.ry], nl = Math.hypot(n[0], n[1]);
+      return { p:pnt, n:[n[0]/nl, n[1]/nl] };
+    };
+    const a = end(A), b = end(B), Dd = Math.hypot(b.p[0]-a.p[0], b.p[1]-a.p[1]), k = Dd*0.42;
+    const c = [a.p, [a.p[0]+a.n[0]*k, a.p[1]+a.n[1]*k], [b.p[0]+b.n[0]*k, b.p[1]+b.n[1]*k], b.p];
+    let prev = c[0];
+    for (let q = 1; q <= 12; q++) { const pt = bez(c, q/12); segs.push([prev, pt]); prev = pt; }
+    const crossing = it.f != null;
+    const col = crossing ? `var(--f${it.f})` : 'var(--muted)';
+    const w = 2, [hl, hw] = headDims(Dd, 2.4);
+    const d = `M${r1(c[0][0])},${r1(c[0][1])} C${r1(c[1][0])},${r1(c[1][1])} ${r1(c[2][0])},${r1(c[2][1])} ${r1(c[3][0])},${r1(c[3][1])}`;
+    curves += `<g class="id-int"${crossing ? ` data-f="${it.f}"` : ''}>`+
+      `<path class="id-curve" d="${d}" fill="none" stroke="${col}" stroke-width="${w}"/>`+
+      `<path d="${d}" fill="none" stroke="transparent" stroke-width="16"/>`+
+      barbs(a.p[0], a.p[1], -a.n[0], -a.n[1], hl, hw, col, w)+
+      barbs(b.p[0], b.p[1], -b.n[0], -b.n[1], hl, hw, col, w)+`</g>`;
+    // label candidates: beside the curve, preferring the outside of its bend
+    const tw0 = tw(`italic 12px ${BODY}`, it.type) + 6, th = 16, cands = [];
+    const side0 = it.bend >= 0 ? 1 : -1;
+    for (const t of [0.5, 0.4, 0.6, 0.3, 0.7])
+      for (const side of [side0, -side0])
+        for (const off of [4, 12, 22]) {
+          const p0 = bez(c, t), p1 = bez(c, t+0.01), tx = p1[0]-p0[0], ty = p1[1]-p0[1], tl = Math.hypot(tx,ty) || 1;
+          const nx = -ty/tl*side, ny = tx/tl*side;
+          const ext = Math.abs(nx)*tw0/2 + Math.abs(ny)*th/2;
+          cands.push({ cx:p0[0]+nx*(off+ext), cy:p0[1]+ny*(off+ext), pen:Math.abs(t-0.5)*40 + off + (side===side0?0:15) });
+        }
+    labels.push({ cands, w:tw0, hh:th, text:it.type, col, f:it.f });
+  });
+  const { place } = makePlacer(segs, blobs, { x0:2, y0:2, x1:358, y1:268 }, [180,135], boxes);
+  const lab = labels.map(l => {
+    const r = place(l.cands, l.w, l.hh);
+    return `<text class="id-type lab"${l.f != null ? ` data-f="${l.f}"` : ''} x="${r1((r.x0+r.x1)/2)}" y="${r1((r.y0+r.y1)/2)}" text-anchor="middle" dominant-baseline="middle" style="fill:${l.col}">${l.text}</text>`;
+  }).join('');
+  let objs = '';
+  for (const o of Object.values(O))
+    objs += `<ellipse class="id-obj" cx="${o.x}" cy="${o.y}" rx="${r1(o.rx)}" ry="${o.ry}"/>`+
+      `<text class="id-name" x="${o.x}" y="${o.y}" text-anchor="middle" dominant-baseline="middle">${o.name}</text>`;
+  const sys = `<ellipse class="id-sys" cx="${sysO.x}" cy="${sysO.y}" rx="${r1(srx)}" ry="${sry}"/>`;
+  svg.innerHTML = curves + objs + sys + lab;
+  $('#rope-note').hidden = !Object.values(D.objs).some(o => /rope/i.test(o.name));
+}
+
+/* ---------- linked highlighting across representations ---------- */
+let hl = null;
+function applyHL(){
+  document.querySelectorAll('[data-f]').forEach(el => {
+    const on = hl != null && +el.dataset.f === hl;
+    el.classList.toggle('hi', on);
+    el.classList.toggle('dim', hl != null && !on);
+  });
+}
+document.addEventListener('pointerover', e => {
+  if (drag) return;
+  const el = e.target.closest('[data-f]'), v = el ? +el.dataset.f : null;
+  if (v !== hl) { hl = v; applyHL(); }
+});
+
+/* ---------- hide / show representations ---------- */
+function setRepHidden(rep, hide){
+  const btn = rep.querySelector('.hide-btn');
+  btn.setAttribute('aria-pressed', hide); btn.textContent = hide ? 'Show' : 'Hide';
+  rep.querySelector('.rep-body').hidden = hide; rep.querySelector('.rep-hidden').hidden = !hide;
+}
+document.querySelectorAll('.rep .hide-btn').forEach(btn => btn.addEventListener('click', () =>
+  setRepHidden(btn.closest('.rep'), btn.getAttribute('aria-pressed') !== 'true')));
+// Each new scenario starts with only the Written Description and Sketch showing.
+const SHOWN_AT_START = ['desc', 'sketch'];
+const resetReps = () => document.querySelectorAll('.rep').forEach(rep => setRepHidden(rep, !SHOWN_AT_START.includes(rep.dataset.rep)));
+
+function renderScenarios(){
+  const pick = $('#scns');
+  if (!pick.options.length) pick.innerHTML = SCN.map((s,i) =>
+    `<option value="${i}">Scenario ${s.num ?? i+1}: ${s.name.replace(/<[^>]+>/g, '')}</option>`).join('');
+  pick.value = si;
+  $('#prev').disabled = si === 0; $('#next').disabled = si === SCN.length - 1;
+  const base = SCN[si], vr = $('#vars');
+  vr.hidden = !base.vars;
+  if (base.vars) {
+    vr.setAttribute('aria-label', base.toggle);
+    vr.innerHTML = `<span class="var-lbl">${base.toggle}:</span>` + base.vars.map((v,k) =>
+      `<button class="scn" data-v="${k}" aria-pressed="${k===vi}">${v.label}</button>`).join('');
+  }
+  $('#desc').innerHTML = sc().name + '.';   // the worksheet's own sentence, nothing more
+  $('#key').textContent = sc().key;
+}
+function renderFBD(){
+  let h = '';
+  const segs = [], blobs = [[0,0,11]], boxes = [];
+  const forces = sc().forces;
+  // Forces already in the VAD are drawn to the VAD's scale; the rest keep a neutral,
+  // direction-only length and are faded once any force has a length to compare against.
+  const lens = [...st.placed.values()].map(p => p.len);
+  const k = lens.length ? Math.min(36, 160 / Math.max(...lens, 1)) : 0;   // FBD px per VAD unit
+  const anyPlaced = lens.length > 0;
+  // Forces that share a direction (e.g. a normal force and friction both up the slope) are drawn
+  // side by side: each tail sits inside the dot, offset to either side of the center, with its label on that side.
+  const rank = forces.map((f,i) => forces.filter((g,j) => j < i && g.ang === f.ang).length);
+  const shared = forces.map(f => forces.filter(g => g.ang === f.ang).length > 1);
+  const SIDE = 7;     // px from the dot's center to each tail of a side-by-side pair
+  const items = forces.map((f,i) => {
+    const placed = st.placed.has(i);
+    return { f, i, placed, b: placed ? Math.max(28, st.placed.get(i).len * k) : 150 };
+  });
+  items.sort((p,q) => q.b - p.b);   // longest first
+  items.forEach(({ f, i, placed, b }) => {
+    const u = dir(f), n = [u[1], u[0]];   // screen direction is (u0, -u1); n is perpendicular to it
+    const sd = shared[i] ? (rank[i] % 2 ? -1 : 1) : 0;
+    const t = [n[0]*sd*SIDE, n[1]*sd*SIDE], e = [t[0] + u[0]*b, t[1] - u[1]*b];
+    let lx = u[0]*(b+30), ly = -u[1]*(b+22);
+    if (sd) { lx = e[0] + u[0]*8 + n[0]*sd*20; ly = e[1] - u[1]*8 + n[1]*sd*20; }
+    segs.push([t, e]);
+    const [hl, hw] = headDims(b, 3.5);
+    blobs.push([e[0]-u[0]*hl/2, e[1]+u[1]*hl/2, Math.max(hw, hl/2)+2]);
+    const lw = tw(`italic 500 17px ${MATH}`, 'F') + tw(`500 11.6px ${MATH}`, sub(f));
+    boxes.push({ x0:lx-lw/2, y0:ly-12, x1:lx+lw/2, y1:ly+14 });
+    h += `<g class="fbd-vec${anyPlaced && !placed ? ' is-pending' : ''}" data-i="${i}" data-f="${i}" tabindex="0" role="button" aria-pressed="${placed}" aria-label="Force F sub ${sub(f)}">`+
+      `<line class="hit" x1="${r1(t[0])}" y1="${r1(t[1])}" x2="${r1(e[0])}" y2="${r1(e[1])}" style="cursor:pointer${sd ? ';stroke-width:12' : ''}"/>`+
+      arrow(t[0], t[1], e[0], e[1], `var(--f${i})`, 3.5)+
+      svgLabel(f, lx, ly, 'middle', 17)+`</g>`;
+  });
+  let under = '', over = '';
+  if (st.angFBD) {
+    const am = { svg:'', segs, labels:[] };
+    forces.forEach(f => refAngles(am, [0,0], dir(f), 32, 62, 13));
+    if (st.ang.b && forces.length > 1) {
+      const order = forces.map((f,i) => ({ i, a:((f.ang % 360) + 360) % 360 })).sort((x,y) => x.a - y.a);
+      order.forEach((o, k) => {
+        const nxt = order[(k+1) % order.length];
+        let gap = nxt.a - o.a; if (gap <= 0) gap += 360;
+        if (gap >= 1 && gap <= 179) angleMark(am, [0,0], -o.a*Math.PI/180, -nxt.a*Math.PI/180, gap, 52, 13);
+      });
+    }
+    const { place } = makePlacer(segs, blobs, { x0:-198, y0:-198, x1:198, y1:198 }, [0,0], boxes);
+    under = am.svg;
+    over = am.labels.map(a => angText(place(a.cands, a.w, a.hh), a)).join('');
+  }
+  fbd.innerHTML = under + h + `<circle r="8" fill="var(--ink)"/>` + over;
+  if (hl != null) applyHL();
+}
+// "F_TPR = Tension Force Exerted ON the Pumpkin BY the Rope", with the type, on and by letters in bold.
+const TYPE_NAME = { g:'Gravitational', N:'Normal', f:'Friction', T:'Tension', P:'Push', D:'Drag' };
+function renderForceKey(){
+  const names = {};   // object letter -> name, read from the scenario's key ("R = right rope, ...")
+  sc().key.split(',').forEach(part => { const [k, v] = part.split('=').map(t => t.trim()); names[k] = v.replace(/\b\w/g, c => c.toUpperCase()); });
+  const boldFirst = w => `<strong>${w[0]}</strong>${w.slice(1)}`;
+  $('#force-key').innerHTML = sc().forces.map((f,i) =>
+    `<li data-f="${i}"><span style="color:var(--f${i})">${htmlLabel(f)}</span> = ${boldFirst(TYPE_NAME[f.t])} Force Exerted ON the ${boldFirst(names[f.on])} BY the ${boldFirst(names[f.by])}</li>`).join('');
+}
+function renderChips(){
+  $('#chips').innerHTML = sc().forces.map((f,i) =>
+    `<li><button class="chip" data-i="${i}" data-f="${i}" aria-pressed="${st.placed.has(i)}"><span class="sw" style="background:var(--f${i})"></span>${htmlLabel(f)}</button></li>`).join('');
+}
+function renderVAD(){
+  const W = vad.clientWidth || 600, H = vad.clientHeight || 420;
+  vad.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  S = Math.max(24, Math.min(W,H)/12); CX = W/2; CY = H/2;
+  let d = '';
+  for (let x = CX % S; x <= W; x += S) d += `M${r1(x)} 0V${H}`;
+  for (let y = CY % S; y <= H; y += S) d += `M0 ${r1(y)}H${W}`;
+  let h = `<path class="grid" d="${d}"/>`;
+  const arr = [...st.placed.values()];
+
+  arr.forEach(p => {
+    const active = drag && drag.mode === 'stretch' && drag.id === p.id;
+    if (!st.rails && !active) return;
+    const u = dir(F(p.id)), a = P(p.x-u[0]*80, p.y-u[1]*80), b = P(p.x+u[0]*80, p.y+u[1]*80);
+    h += `<line class="rail${active?' active':''}" x1="${r1(a[0])}" y1="${r1(a[1])}" x2="${r1(b[0])}" y2="${r1(b[1])}" style="stroke:var(--f${p.id})"/>`;
+  });
+
+  // Screen geometry for every arrow, so labels can avoid all of it.
+  const geo = arr.map(p => { const f = F(p.id); return { p, f, t:P(p.x,p.y), tp:P(...tipOf(p)), col:`var(--f${p.id})`, k:known(f) }; });
+  const segs = geo.map(g => [g.t, g.tp]);
+  const pts = geo.flatMap(g => [g.t, g.tp]);
+  const cen = pts.length ? [pts.reduce((s,q)=>s+q[0],0)/pts.length, pts.reduce((s,q)=>s+q[1],0)/pts.length] : [CX,CY];
+  const boxes = [];   // label boxes already placed
+  const blobs = [];   // circles to keep labels off (tip rings, arrowheads)
+  geo.forEach(g => {
+    if (!g.k) blobs.push([g.tp[0], g.tp[1], 15]);
+    const L = Math.hypot(g.tp[0]-g.t[0], g.tp[1]-g.t[1]) || 1, [hl, hw] = headDims(L, 4);
+    blobs.push([g.tp[0]-(g.tp[0]-g.t[0])/L*hl*0.5, g.tp[1]-(g.tp[1]-g.t[1])/L*hl*0.5, Math.max(hw, hl*0.5)+3]); // arrowhead
+  });
+
+  // --- angle marks (fixed by each force's direction, so they never change while dragging) ---
+  const am = { svg:'', segs, labels:[] };
+  if (st.angVAD) {
+    geo.forEach(g => { const Lp = Math.hypot(g.tp[0]-g.t[0], g.tp[1]-g.t[1]); refAngles(am, g.t, dir(g.f), Math.max(18, Math.min(28, 0.4*Lp)), 48, 14); });
+    if (st.ang.b) {
+      const { m } = links();
+      m.forEach((j, i) => {
+        const ui = dir(F(i)), uj = dir(F(j));
+        const th0 = Math.atan2(ui[1], -ui[0]);      // back along the incoming arrow (screen coords)
+        const th1 = Math.atan2(-uj[1], uj[0]);      // forward along the outgoing arrow
+        const deg = Math.abs(normA(th1 - th0))*180/Math.PI;
+        const Lp = Math.min(st.placed.get(i).len, st.placed.get(j).len)*S;
+        const [hl] = headDims(st.placed.get(i).len*S, 4);
+        if (deg >= 1 && deg <= 179) angleMark(am, P(...tipOf(st.placed.get(i))), th0, th1, deg, Math.max(hl+8, Math.min(40, 0.35*Lp)), 14);
+      });
+    }
+  }
+  h += am.svg;
+  const { place, besideSegment } = makePlacer(segs, blobs, { x0:4, y0:4, x1:W-4, y1:H-4 }, cen, boxes);
+
+  // --- draw arrows (labels come later so they sit on top) ---
+  geo.forEach(g => {
+    const { p, t, tp, col, k } = g;
+    h += `<g class="vec" data-id="${p.id}" data-f="${p.id}">`+
+      `<line class="hit" data-part="body" x1="${r1(t[0])}" y1="${r1(t[1])}" x2="${r1(tp[0])}" y2="${r1(tp[1])}"/>`+
+      `<circle class="vis" cx="${r1(t[0])}" cy="${r1(t[1])}" r="3.5" fill="${col}"/>`+
+      (k ? '' : `<circle class="ring vis" cx="${r1(tp[0])}" cy="${r1(tp[1])}" r="14" style="stroke:${col}"/>`)+
+      `<g class="vis">${arrow(t[0],t[1],tp[0],tp[1],col,4)}</g>`+
+      `<circle class="handle ${k?'locked':'free'}" data-part="handle" cx="${r1(tp[0])}" cy="${r1(tp[1])}" r="18"/>`+
+      `</g>`;
+  });
+
+  // --- place labels: angles first, then arrows, longest first ---
+  let lh = '';
+  am.labels.forEach(a => { lh += angText(place(a.cands, a.w, a.hh), a); });
+  [...geo].sort((a,b) => b.p.len - a.p.len).forEach(g => {
+    const w = tw(`italic 500 18px ${MATH}`, 'F') + tw(`500 12.24px ${MATH}`, sub(g.f)) + 8, hh = 26;
+    const r = place(besideSegment(g.t, g.tp, w, hh), w, hh);
+    lh += `<g class="lab">${svgLabel(g.f, (r.x0+r.x1)/2, (r.y0+r.y1)/2 - 3, 'middle', 18, g.col)}</g>`;
+  });
+  h += lh;
+  if (snapPt) { const c = P(...snapPt); h += `<circle class="snap" cx="${r1(c[0])}" cy="${r1(c[1])}" r="10"/>`; }
+  vad.innerHTML = h;
+  if (hl != null) applyHL();
+}
+function updateStatus(){
+  const A = analyze(), total = sc().forces.length;
+  let msg;
+  if (!A.n) msg = 'Click a force on the free body diagram to bring it here.';
+  else if (A.n < total) msg = `${A.n} of ${total} forces placed. Bring over the rest.`;
+  else if (!A.connected) msg = 'Join every arrow head-to-tail. Drag an arrow near another’s head and it snaps into place.';
+  else msg = Math.hypot(...A.sum) < CLOSE_TOL ? MSG_BALANCED : MSG_UNBALANCED;
+  $('#msg').innerHTML = msg;
+}
+function render(){ renderSketch(); renderID(); renderFBD(); renderForceKey(); renderChips(); renderVAD(); updateStatus(); applyHL(); }
+
+function showHint(text, sticky=false){
+  const el = $('#hint'); el.textContent = text; el.classList.add('show');
+  clearTimeout(hintTimer); if (!sticky) hintTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+function hideHint(){ clearTimeout(hintTimer); $('#hint').classList.remove('show'); }
+
+/* ---------- actions ---------- */
+function toggleForce(i){
+  if (st.placed.has(i)) { st.placed.delete(i); }
+  else {
+    const f = F(i), u = dir(f), len = known(f) ? G_LEN : START_LEN, k = st.placed.size;
+    const c = [((k % 3) - 1)*3, 1.5 - Math.floor(k/3)*3];
+    st.placed.set(i, { id:i, x:c[0]-u[0]*len/2, y:c[1]-u[1]*len/2, len });
+  }
+  render();
+}
+function selectScenario(i, v = 0){
+  if (i !== si) resetReps();   // a new scenario (not the smooth/rough toggle) hides the ID, FBD and VAD again
+  si = i; vi = v; st.placed.clear(); renderScenarios(); render();
+}
+/* ---------- pointer interaction ---------- */
+function toWorld(e){
+  const rc = vad.getBoundingClientRect();
+  return [(e.clientX - rc.left - CX)/S, (CY - (e.clientY - rc.top))/S];
+}
+vad.addEventListener('pointerdown', e => {
+  const g = e.target.closest('[data-id]'); if (!g) return;
+  const id = +g.dataset.id, part = e.target.dataset.part || 'body';
+  const now = performance.now();
+  if (lastTap.id === id && now - lastTap.t < 350) { lastTap = {}; st.placed.delete(id); render(); return; }
+  lastTap = { id, t:now };
+  const p = st.placed.get(id); st.placed.delete(id); st.placed.set(id, p); // bring to front
+  const w = toWorld(e);
+  if (part === 'handle') {
+    if (known(F(id))) { showHint('This force’s length is fixed so you can compare the other forces to it. Drag the shaft to move it.'); render(); return; }
+    drag = { mode:'stretch', id, down:downstream(id), tip0:tipOf(p) };
+  } else {
+    drag = { mode:'move', id, off:[w[0]-p.x, w[1]-p.y] };
+  }
+  vad.setPointerCapture(e.pointerId); e.preventDefault(); render();
+});
+vad.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const w = toWorld(e), p = st.placed.get(drag.id), u = dir(F(p.id));
+  snapPt = null;
+  if (drag.mode === 'move') {
+    p.x = w[0]-drag.off[0]; p.y = w[1]-drag.off[1];
+    const myTip = tipOf(p); let best = 0.45, adj = null;
+    for (const q of st.placed.values()) {
+      if (q.id === p.id) continue;
+      const qt = tipOf(q), d1 = dist([p.x,p.y], qt), d2 = dist(myTip, [q.x,q.y]);
+      if (d1 < best) { best = d1; adj = [qt[0]-p.x, qt[1]-p.y]; snapPt = qt; }
+      if (d2 < best) { best = d2; adj = [q.x-myTip[0], q.y-myTip[1]]; snapPt = [q.x,q.y]; }
+    }
+    if (adj) { p.x += adj[0]; p.y += adj[1]; }
+  } else {
+    const rx = w[0]-p.x, ry = w[1]-p.y;
+    let L = rx*u[0] + ry*u[1]; const perp = Math.abs(rx*u[1] - ry*u[0]);
+    L = Math.max(0.3, Math.min(14, Math.round(L*20)/20));
+    const ex = new Set([p.id, ...drag.down.map(d => d.id)]);
+    for (const q of st.placed.values()) {
+      if (ex.has(q.id)) continue;
+      const qx = q.x-p.x, qy = q.y-p.y, Lq = qx*u[0]+qy*u[1], dq = Math.abs(qx*u[1]-qy*u[0]);
+      if (Lq > 0.3 && dq < 0.25 && Math.abs(Lq-L) < 0.4) { L = Lq; snapPt = [q.x,q.y]; break; }
+    }
+    p.len = L;
+    const tp = tipOf(p), dx = tp[0]-drag.tip0[0], dy = tp[1]-drag.tip0[1];
+    drag.down.forEach(d => { const q = st.placed.get(d.id); q.x = d.x0+dx; q.y = d.y0+dy; });
+    if (perp > 1.2) showHint('Direction is locked. Only the length can change, so the head stays on the dashed line.', true);
+    else hideHint();
+  }
+  renderVAD(); renderFBD(); updateStatus();
+});
+function endDrag(){ if (!drag) return; drag = null; snapPt = null; hideHint(); renderVAD(); renderFBD(); updateStatus(); }
+vad.addEventListener('pointerup', endDrag);
+vad.addEventListener('pointercancel', endDrag);
+
+/* ---------- wiring ---------- */
+$('#scns').addEventListener('change', e => selectScenario(+e.target.value));
+$('#prev').addEventListener('click', () => { if (si > 0) selectScenario(si - 1); });
+$('#next').addEventListener('click', () => { if (si < SCN.length - 1) selectScenario(si + 1); });
+$('#vars').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b && +b.dataset.v !== vi) selectScenario(si, +b.dataset.v); });
+$('#chips').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) toggleForce(+b.dataset.i); });
+fbd.addEventListener('click', e => { const g = e.target.closest('[data-i]'); if (g) toggleForce(+g.dataset.i); });
+fbd.addEventListener('keydown', e => {
+  const g = e.target.closest('[data-i]');
+  if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleForce(+g.dataset.i); }
+});
+$('#rails').addEventListener('change', e => { st.rails = e.target.checked; renderVAD(); });
+document.querySelector('.anglebar').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.ang) st.ang[t.dataset.ang] = t.checked;
+  if (t.dataset.on) st[t.dataset.on] = t.checked;
+  renderFBD(); renderVAD();
+});
+$('#restart').addEventListener('click', () => { st.placed.clear(); render(); });
+new ResizeObserver(() => renderVAD()).observe(vad);
+
+renderScenarios(); render();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
+</script>
+</body>
+</html>
