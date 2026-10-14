@@ -139,9 +139,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--f0);outline-off
 .ring{fill:none;stroke-width:1.5;stroke-dasharray:3 3}
 .lbl{font-family:var(--math);fill:var(--ink)}
 .snap{fill:none;stroke:var(--ink);stroke-width:2}
+.start-lbl{fill:var(--muted);font-family:var(--body);font-size:13px;font-weight:700}
 #hint{position:absolute;left:12px;right:12px;top:12px;margin:0;background:var(--ink);color:var(--panel);padding:8px 12px;border-radius:7px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .15s}
 #hint.show{opacity:1}
-#msg{margin:0 0 10px;max-width:70ch}
+#msg{margin:0 0 10px;max-width:70ch;min-height:4.2em}   /* room for the longest message, so the grid below does not jump */
+@media (max-width:600px){#msg{min-height:7.4em}}
 #msg .yes{color:var(--good)}
 #msg .no{color:var(--bad)}
 @media (prefers-reduced-motion:reduce){#hint{transition:none}}
@@ -269,8 +271,10 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
 </div>
 
 <script>
-const G_LEN = 4;        // grid squares: the gravitational force has this fixed length, the reference for the others
+const REF_LEN = 4;      // grid squares: the first force brought into the VAD has this fixed length and is centered on the grid; it is the reference for the others
 const START_LEN = 2;    // grid squares: starting length of every other force
+// Where the 2nd, 3rd, ... forces land (their midpoints, in grid squares from the center), clear of the centered first force.
+const SLOTS = [[-3.5,3],[3.5,3],[-3.5,-3],[3.5,-3]];
 const CLOSE_TOL = 0.25; // grid units: a VAD this close to its start counts as ending where it started
 const MSG_BALANCED = 'When these force vectors are added head to tail, the diagram ends where it started, so the <strong>result of all the forces exerted on the pumpkin</strong> is <span class="yes">“<strong>nothing</strong>.”</span>';
 const MSG_UNBALANCED = 'When these force vectors are added head to tail, the diagram doesn’t end where it started, so the <strong>result of all the forces exerted on the pumpkin</strong> is <span class="no"><strong>NOT</strong> “<strong>nothing</strong>.”</span>';
@@ -286,44 +290,44 @@ const ID_HILL2 = { sys:"P",
 const SCN = [
   { name:"Pumpkin is motionless",
     key:"P = pumpkin, G = ground, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"G",ang:90}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"G",ang:90}],
     id:ID_LEVEL2 },
   { name:"Pumpkin is sliding at a <em>constant</em> velocity",
     key:"P = pumpkin, G = ground, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"G",ang:90}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"G",ang:90}],
     id:ID_LEVEL2 },
   { name:"Pumpkin is slowing down on a rough surface",
     key:"P = pumpkin, G = ground, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, G:{name:"Ground (G)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
       ints:[{a:"G",b:"P",type:"compression",f:1,bend:-34},{a:"G",b:"P",type:"shear",f:2,bend:34},{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"E",b:"G",type:"field",bend:-20}] } },
   { name:"Pumpkin is sliding down a smooth hill",
     key:"P = pumpkin, H = hill, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:60}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:60}],
     id:ID_HILL2 },
   { name:"Pumpkin is at rest on a rough hill",
     key:"P = pumpkin, H = hill, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:60},{t:"f",on:"P",by:"H",ang:150}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:60},{t:"f",on:"P",by:"H",ang:150}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, H:{name:"Hill (H)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
       ints:[{a:"H",b:"P",type:"compression",f:1,bend:-34},{a:"H",b:"P",type:"shear",f:2,bend:34},{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"E",b:"H",type:"field",bend:-20}] } },
   { name:"Pumpkin is hanging from a rope",
     key:"P = pumpkin, R = rope, C = ceiling, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"R",ang:90}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"R",ang:90}],
     id:{ sys:"P",
       objs:{ C:{name:"Ceiling (C)",x:90,y:38}, R:{name:"Rope (R)",x:90,y:135}, P:{name:"Pumpkin (P)",x:90,y:228}, E:{name:"Earth (E)",x:270,y:135} },
       ints:[{a:"R",b:"P",type:"extension",f:1,bend:0},{a:"C",b:"R",type:"extension",bend:0},{a:"E",b:"P",type:"field",f:0,bend:-20},{a:"E",b:"C",type:"field",bend:20}] } },
   { name:"Pumpkin is hanging by two ropes",
     key:"P = pumpkin, L = left rope, R = right rope, C = ceiling, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"L",ang:120},{t:"T",on:"P",by:"R",ang:30}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"L",ang:120},{t:"T",on:"P",by:"R",ang:30}],
     id:{ sys:"P",
       objs:{ C:{name:"Ceiling (C)",x:180,y:32}, L:{name:"Left rope (L)",x:62,y:125}, E:{name:"Earth (E)",x:180,y:125}, R:{name:"Right rope (R)",x:298,y:125}, P:{name:"Pumpkin (P)",x:180,y:222} },
       ints:[{a:"L",b:"P",type:"extension",f:1,bend:-34},{a:"R",b:"P",type:"extension",f:2,bend:34},{a:"C",b:"L",type:"extension",bend:22},{a:"C",b:"R",type:"extension",bend:-22},
             {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"C",type:"field",bend:0}] } },
   { name:"Pumpkin is in free fall (negligible air resistance)",
     key:"P = pumpkin, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true}],
+    forces:[{t:"g",on:"P",by:"E",ang:270}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:180,y:70}, E:{name:"Earth (E)",x:180,y:205} },
       ints:[{a:"E",b:"P",type:"field",f:0,bend:0}] } },
@@ -332,20 +336,20 @@ const SCN = [
     key:"P = pumpkin, H = hill, B = block, E = Earth",
     vars:[
       { label:"Smooth hill", rough:false,
-        forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:120},{t:"N",on:"P",by:"B",ang:30}],
+        forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:120},{t:"N",on:"P",by:"B",ang:30}],
         id:{ sys:"P",
           objs:{ P:{name:"Pumpkin (P)",x:95,y:120}, B:{name:"Block (B)",x:275,y:40}, H:{name:"Hill (H)",x:275,y:185}, E:{name:"Earth (E)",x:110,y:240} },
           ints:[{a:"H",b:"P",type:"compression",f:1,bend:20},{a:"B",b:"P",type:"compression",f:2,bend:20},{a:"B",b:"H",type:"compression",bend:0},
                 {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:20}] } },
       { label:"Rough hill", rough:true,
-        forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:120},{t:"N",on:"P",by:"B",ang:30},{t:"f",on:"P",by:"H",ang:30}],
+        forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:120},{t:"N",on:"P",by:"B",ang:30},{t:"f",on:"P",by:"H",ang:30}],
         id:{ sys:"P",
           objs:{ P:{name:"Pumpkin (P)",x:95,y:120}, B:{name:"Block (B)",x:275,y:40}, H:{name:"Hill (H)",x:275,y:185}, E:{name:"Earth (E)",x:110,y:240} },
           ints:[{a:"H",b:"P",type:"compression",f:1,bend:-30},{a:"H",b:"P",type:"shear",f:3,bend:30},{a:"B",b:"P",type:"compression",f:2,bend:20},{a:"B",b:"H",type:"compression",bend:0},
                 {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:20}] } } ] },
   { name:"Pumpkin is pulled upward, using a rope on a pulley, at a <em>constant</em> velocity",
     key:"P = pumpkin, R = rope, W = pulley, C = ceiling, H = Headless Horseman, G = ground, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"R",ang:90}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"R",ang:90}],
     id:{ sys:"P",
       objs:{ C:{name:"Ceiling (C)",x:296,y:30}, W:{name:"Pulley (W)",x:175,y:30}, R:{name:"Rope (R)",x:70,y:118}, P:{name:"Pumpkin (P)",x:70,y:226},
              H:{name:"Horseman (H)",x:250,y:128}, G:{name:"Ground (G)",x:300,y:232}, E:{name:"Earth (E)",x:172,y:236} },
@@ -353,17 +357,17 @@ const SCN = [
             {a:"H",b:"G",type:"compression",bend:0},{a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:-18},{a:"E",b:"G",type:"field",bend:0}] } },
   { num:"11a", name:"Pumpkin is sliding up a smooth hill, slowing down",
     key:"P = pumpkin, H = hill, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"N",on:"P",by:"H",ang:120}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:120}],
     id:ID_HILL2 },
   { num:"11b", name:"Pumpkin is falling at a <em>constant</em> velocity (air resistance is not negligible)",
     key:"P = pumpkin, A = air, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"D",on:"P",by:"A",ang:90}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"D",on:"P",by:"A",ang:90}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:110,y:75}, A:{name:"Air (A)",x:285,y:95}, E:{name:"Earth (E)",x:160,y:225} },
       ints:[{a:"A",b:"P",type:"compression",f:1,bend:-20},{a:"E",b:"P",type:"field",f:0,bend:0}] } },
   { num:"11c", name:"Pumpkin is held at rest against a rough wall",
     key:"P = pumpkin, H = Headless Horseman, W = wall, G = ground, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"P",on:"P",by:"H",ang:0},{t:"N",on:"P",by:"W",ang:180},{t:"f",on:"P",by:"W",ang:90}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"P",on:"P",by:"H",ang:0},{t:"N",on:"P",by:"W",ang:180},{t:"f",on:"P",by:"W",ang:90}],
     id:{ sys:"P",
       objs:{ H:{name:"Horseman (H)",x:68,y:110}, P:{name:"Pumpkin (P)",x:190,y:110}, W:{name:"Wall (W)",x:310,y:110}, G:{name:"Ground (G)",x:68,y:232}, E:{name:"Earth (E)",x:230,y:232} },
       ints:[{a:"H",b:"P",type:"compression",f:1,bend:0},{a:"W",b:"P",type:"compression",f:2,bend:-28},{a:"W",b:"P",type:"shear",f:3,bend:28},
@@ -371,7 +375,7 @@ const SCN = [
             {a:"E",b:"H",type:"field",bend:30},{a:"E",b:"G",type:"field",bend:0}] } },
   { num:"11d", name:"Pumpkin is pulled across rough ground and speeds up",
     key:"P = pumpkin, R = rope, H = Headless Horseman, G = ground, E = Earth",
-    forces:[{t:"g",on:"P",by:"E",ang:270,fix:true},{t:"T",on:"P",by:"R",ang:30},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
+    forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"R",ang:30},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:70,y:85}, R:{name:"Rope (R)",x:180,y:35}, H:{name:"Horseman (H)",x:290,y:85}, G:{name:"Ground (G)",x:180,y:165}, E:{name:"Earth (E)",x:180,y:248} },
       ints:[{a:"R",b:"P",type:"extension",f:1,bend:16},{a:"R",b:"H",type:"extension",bend:-16},
@@ -383,12 +387,13 @@ const SCN = [
 const $ = s => document.querySelector(s);
 const vad = $('#vad'), fbd = $('#fbd');
 let si = 0, vi = 0;
-const st = { placed:new Map(), rails:false, ang:{ h:false, v:false, b:false }, angFBD:true, angVAD:true };
+const st = { placed:new Map(), anchor:null, seq:0, rails:false, ang:{ h:false, v:false, b:false }, angFBD:true, angVAD:true };
 let drag = null, snapPt = null, S = 40, CX = 0, CY = 0, lastTap = {}, hintTimer = null;
 
 const sc = () => { const s = SCN[si]; return s.vars ? { ...s, ...s.vars[vi] } : s; };
 const F = i => sc().forces[i];
-const known = f => !!f.fix;
+// The anchor: the first force brought into the VAD. Its tail is locked at the "start" and its length is the reference.
+const isAnchor = id => id === st.anchor && st.placed.has(id);
 const dir = f => { const a = f.ang*Math.PI/180; return [Math.cos(a), Math.sin(a)]; };
 const sub = f => f.t + f.on + f.by;
 const tipOf = p => { const u = dir(F(p.id)); return [p.x+u[0]*p.len, p.y+u[1]*p.len]; };
@@ -447,9 +452,16 @@ function analyze(){
   const connected = order.length === n && [...inc.values()].every(c => c === 1);
   return { n, connected, sum };
 }
+// Forces joined head-to-tail in a chain that starts at the anchor (the anchor itself not included).
+function chainFromAnchor(){
+  const { m } = links(), out = new Set(); if (!isAnchor(st.anchor)) return out;
+  let j = m.get(st.anchor);
+  while (j != null && !out.has(j) && !isAnchor(j)) { out.add(j); j = m.get(j); }
+  return out;
+}
 function downstream(id){
   const { m } = links(), out = [], seen = new Set([id]); let j = m.get(id);
-  while (j != null && !seen.has(j)) { const q = st.placed.get(j); out.push({ id:j, x0:q.x, y0:q.y }); seen.add(j); j = m.get(j); }
+  while (j != null && !seen.has(j) && !isAnchor(j)) { const q = st.placed.get(j); out.push({ id:j, x0:q.x, y0:q.y }); seen.add(j); j = m.get(j); }   // the anchor never moves
   return out;
 }
 
@@ -960,7 +972,7 @@ function renderVAD(){
   });
 
   // Screen geometry for every arrow, so labels can avoid all of it.
-  const geo = arr.map(p => { const f = F(p.id); return { p, f, t:P(p.x,p.y), tp:P(...tipOf(p)), col:`var(--f${p.id})`, k:known(f) }; });
+  const geo = arr.map(p => { const f = F(p.id); return { p, f, t:P(p.x,p.y), tp:P(...tipOf(p)), col:`var(--f${p.id})`, k:isAnchor(p.id) }; });
   const segs = geo.map(g => [g.t, g.tp]);
   const pts = geo.flatMap(g => [g.t, g.tp]);
   const cen = pts.length ? [pts.reduce((s,q)=>s+q[0],0)/pts.length, pts.reduce((s,q)=>s+q[1],0)/pts.length] : [CX,CY];
@@ -997,7 +1009,6 @@ function renderVAD(){
     const { p, t, tp, col, k } = g;
     h += `<g class="vec" data-id="${p.id}" data-f="${p.id}">`+
       `<line class="hit" data-part="body" x1="${r1(t[0])}" y1="${r1(t[1])}" x2="${r1(tp[0])}" y2="${r1(tp[1])}"/>`+
-      `<circle class="vis" cx="${r1(t[0])}" cy="${r1(t[1])}" r="3.5" fill="${col}"/>`+
       (k ? '' : `<circle class="ring vis" cx="${r1(tp[0])}" cy="${r1(tp[1])}" r="14" style="stroke:${col}"/>`)+
       `<g class="vis">${arrow(t[0],t[1],tp[0],tp[1],col,4)}</g>`+
       `<circle class="handle ${k?'locked':'free'}" data-part="handle" cx="${r1(tp[0])}" cy="${r1(tp[1])}" r="18"/>`+
@@ -1013,6 +1024,13 @@ function renderVAD(){
     lh += `<g class="lab">${svgLabel(g.f, (r.x0+r.x1)/2, (r.y0+r.y1)/2 - 3, 'middle', 18, g.col)}</g>`;
   });
   h += lh;
+  // "start" at the tail of the first (anchor) force, just behind it along its line.
+  if (isAnchor(st.anchor)) {
+    const a = st.placed.get(st.anchor), t = P(a.x, a.y), tp = P(...tipOf(a)), L = Math.hypot(tp[0]-t[0], tp[1]-t[1]) || 1;
+    const ux = (tp[0]-t[0])/L, uy = (tp[1]-t[1])/L, x = t[0]-ux*16, y = t[1]-uy*16;
+    const anchor = ux > 0.5 ? 'end' : ux < -0.5 ? 'start' : 'middle';
+    h += `<text class="lab start-lbl" x="${r1(x)}" y="${r1(y)}" text-anchor="${anchor}" dominant-baseline="middle">start</text>`;
+  }
   if (snapPt) { const c = P(...snapPt); h += `<circle class="snap" cx="${r1(c[0])}" cy="${r1(c[1])}" r="10"/>`; }
   vad.innerHTML = h;
   if (hl != null) applyHL();
@@ -1035,12 +1053,24 @@ function showHint(text, sticky=false){
 function hideHint(){ clearTimeout(hintTimer); $('#hint').classList.remove('show'); }
 
 /* ---------- actions ---------- */
+// Length REF_LEN, with the middle of the arrow at the center of the grid.
+function centerAnchor(p){ const u = dir(F(p.id)); p.len = REF_LEN; p.x = -u[0]*REF_LEN/2; p.y = -u[1]*REF_LEN/2; }
 function toggleForce(i){
-  if (st.placed.has(i)) { st.placed.delete(i); }
-  else {
-    const f = F(i), u = dir(f), len = known(f) ? G_LEN : START_LEN, k = st.placed.size;
-    const c = [((k % 3) - 1)*3, 1.5 - Math.floor(k/3)*3];
-    st.placed.set(i, { id:i, x:c[0]-u[0]*len/2, y:c[1]-u[1]*len/2, len });
+  if (st.placed.has(i)) {
+    st.placed.delete(i);
+    if (i === st.anchor) {   // the earliest force still placed becomes the new centered reference
+      const next = [...st.placed.values()].sort((a, b) => a.seq - b.seq)[0];
+      st.anchor = next ? next.id : null;
+      if (next) centerAnchor(next);
+    }
+  } else {
+    const u = dir(F(i)), p = { id:i, seq:++st.seq, len:START_LEN, x:0, y:0 };
+    if (!isAnchor(st.anchor)) { st.anchor = i; centerAnchor(p); }
+    else {
+      const c = SLOTS[(st.placed.size - 1) % SLOTS.length];
+      p.x = c[0]-u[0]*p.len/2; p.y = c[1]-u[1]*p.len/2;
+    }
+    st.placed.set(i, p);
   }
   render();
 }
@@ -1057,13 +1087,17 @@ vad.addEventListener('pointerdown', e => {
   const g = e.target.closest('[data-id]'); if (!g) return;
   const id = +g.dataset.id, part = e.target.dataset.part || 'body';
   const now = performance.now();
-  if (lastTap.id === id && now - lastTap.t < 350) { lastTap = {}; st.placed.delete(id); render(); return; }
+  if (lastTap.id === id && now - lastTap.t < 350) { lastTap = {}; toggleForce(id); return; }   // double-tap removes it
   lastTap = { id, t:now };
   const p = st.placed.get(id); st.placed.delete(id); st.placed.set(id, p); // bring to front
   const w = toWorld(e);
+  if (isAnchor(id)) {
+    showHint(part === 'handle' ? 'The first force is the reference: its length stays fixed. Adjust the other forces to compare with it.'
+                               : 'The first force stays fixed at the start. Move the others to it.');
+    render(); return;
+  }
   if (part === 'handle') {
-    if (known(F(id))) { showHint('This force’s length is fixed so you can compare the other forces to it. Drag the shaft to move it.'); render(); return; }
-    drag = { mode:'stretch', id, down:downstream(id), tip0:tipOf(p) };
+    drag = { mode:'stretch', id, down:downstream(id), tip0:tipOf(p), inChain:chainFromAnchor().has(id) };
   } else {
     drag = { mode:'move', id, off:[w[0]-p.x, w[1]-p.y] };
   }
@@ -1080,7 +1114,8 @@ vad.addEventListener('pointermove', e => {
       if (q.id === p.id) continue;
       const qt = tipOf(q), d1 = dist([p.x,p.y], qt), d2 = dist(myTip, [q.x,q.y]);
       if (d1 < best) { best = d1; adj = [qt[0]-p.x, qt[1]-p.y]; snapPt = qt; }
-      if (d2 < best) { best = d2; adj = [q.x-myTip[0], q.y-myTip[1]]; snapPt = [q.x,q.y]; }
+      // A head never snaps onto the start by a move: the chain is built forward from the start and only closes there.
+      if (d2 < best && !isAnchor(q.id)) { best = d2; adj = [q.x-myTip[0], q.y-myTip[1]]; snapPt = [q.x,q.y]; }
     }
     if (adj) { p.x += adj[0]; p.y += adj[1]; }
   } else {
@@ -1088,6 +1123,7 @@ vad.addEventListener('pointermove', e => {
     let L = rx*u[0] + ry*u[1]; const perp = Math.abs(rx*u[1] - ry*u[0]);
     L = Math.max(0.3, Math.min(14, Math.round(L*20)/20));
     const ex = new Set([p.id, ...drag.down.map(d => d.id)]);
+    if (!drag.inChain) ex.add(st.anchor);   // stretching onto the start only closes a chain that runs from the start
     for (const q of st.placed.values()) {
       if (ex.has(q.id)) continue;
       const qx = q.x-p.x, qy = q.y-p.y, Lq = qx*u[0]+qy*u[1], dq = Math.abs(qx*u[1]-qy*u[0]);
@@ -1099,7 +1135,7 @@ vad.addEventListener('pointermove', e => {
     if (perp > 1.2) showHint('Direction is locked. Only the length can change, so the head stays on the dashed line.', true);
     else hideHint();
   }
-  renderVAD(); renderFBD(); updateStatus();
+  renderVAD(); renderFBD();   // the status line waits for pointerup: changing it mid-drag shifts the grid under the pointer
 });
 function endDrag(){ if (!drag) return; drag = null; snapPt = null; hideHint(); renderVAD(); renderFBD(); updateStatus(); }
 vad.addEventListener('pointerup', endDrag);
