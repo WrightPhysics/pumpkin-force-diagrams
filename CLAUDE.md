@@ -7,7 +7,7 @@ It started as a copy of `physics-force-vad-solve` (see that repo's CLAUDE.md). T
 ## How the project works
 
 - Everything is in **one file: `index.html`** (inline CSS and JS, no build step, no dependencies besides Google Fonts).
-- Planned to deploy like the other sims: GitHub Pages from `WrightPhysics/pumpkin-force-diagrams`, with a card on the wrightphysics.org homepage (`WrightPhysics/wrightphysics.github.io`). The GitHub repo has not been created yet.
+- Deployed like the other sims: GitHub Pages from `WrightPhysics/pumpkin-force-diagrams`, with a card on the wrightphysics.org homepage (`WrightPhysics/wrightphysics.github.io`). Live at https://wrightphysics.org/pumpkin-force-diagrams/ (repo `WrightPhysics/pumpkin-force-diagrams`).
 - After any JS change, syntax-check the `<script>` block (`node --check`, or load the page and check the console), then check the page in a browser.
 
 ## Working with Richard
@@ -33,7 +33,9 @@ It started as a copy of `physics-force-vad-solve` (see that repo's CLAUDE.md). T
   - Below ~900 px it becomes one column: Written Description, Sketch, ID, FBD, VAD.
 - The **Angle Annotations** bar sits below all of that.
 - Every representation panel, the VAD included, has a Hide/Show button with a placeholder asking students to build it.
-- **On page load and whenever students move to a different scenario, the ID, FBD and VAD are hidden** and the Written Description and Sketch are shown (`resetReps`, `SHOWN_AT_START`). Switching Smooth/Rough on #9 keeps whatever is showing.
+- **On page load and whenever students move to a different scenario, every panel is shown** (`resetReps`, `SHOWN_AT_START`); students can hide any of them. Switching Smooth/Rough on #9 keeps whatever is showing. (Earlier the ID, FBD and VAD started hidden; Richard changed the default to show all.)
+- The VAD panel header has a "VAD reference (PDF)" link (opens `vad-reference.pdf` in a new tab), a one-page student handout on building a VAD from an FBD. Its source is Richard's Claude Docs doc; the PDF is a separately built copy, so rebuild and replace the file when the doc changes.
+- The VAD starts with an instruction line (`.vad-intro`, Richard's exact wording) above its controls.
 - The VAD's "Show lines of action" and "Start over" controls are inside its body, so they hide with it.
 
 ## This activity is qualitative

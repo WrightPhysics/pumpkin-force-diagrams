@@ -170,6 +170,10 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--f0);outline-off
 .hide-btn[aria-pressed="true"]{background:var(--accent);color:var(--panel);border-color:var(--accent)}
 button.btn{color:var(--accent);border-color:var(--accent)}
 button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-color:var(--accent)}
+.vad-intro{margin:0 0 10px}
+.head-tools{display:flex;align-items:baseline;gap:12px;flex:none}
+.ref-link{color:var(--accent);font-weight:700;font-size:.9rem;white-space:nowrap}
+@media (max-width:600px){.rep-head:has(.head-tools){flex-wrap:wrap}.head-tools{width:100%;justify-content:space-between}}
 .rep-head h2{border-left:4px solid var(--accent);padding-left:8px;line-height:1.2}
 .rep-hidden::before{content:"";display:block;width:30px;height:36px;margin:0 auto 6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 40'%3E%3Cpath d='M17 2C8.5 2 3 8.5 3 17v20l4.7-4 4.6 4 4.7-4 4.7 4 4.6-4 4.7 4V17C31 8.5 25.5 2 17 2Z' fill='%23F4F7FB' stroke='%23789EC4' stroke-width='2' stroke-linejoin='round'/%3E%3Cellipse cx='12.5' cy='16' rx='2.4' ry='3.2' fill='%23111921'/%3E%3Cellipse cx='21.5' cy='16' rx='2.4' ry='3.2' fill='%23111921'/%3E%3Cellipse cx='17' cy='24' rx='3' ry='2' fill='%23111921'/%3E%3C/svg%3E") center/contain no-repeat}
 </style>
@@ -208,13 +212,13 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
       <p class="rep-hidden" hidden>Hidden. Write it from the other representations.</p>
     </section>
     <section class="panel rep" data-rep="id" aria-labelledby="id-h">
-      <div class="rep-head"><h2 id="id-h">Interaction Diagram (ID)</h2><button class="hide-btn" aria-pressed="true">Show</button></div>
-      <div class="rep-body" hidden>
+      <div class="rep-head"><h2 id="id-h">Interaction Diagram (ID)</h2><button class="hide-btn" aria-pressed="false">Hide</button></div>
+      <div class="rep-body">
         <svg id="idg" viewBox="0 0 360 270" role="img" aria-label="Interaction diagram"></svg>
         <p class="note">Each interaction that crosses the dashed system boundary is one force on the free body diagram.</p>
         <p class="note" id="rope-note" hidden>There is not a field interaction between Earth and the rope because we need to treat our ropes as so light that they are essentially “massless” right now, thus not affected by Earth’s gravitational field.</p>
       </div>
-      <p class="rep-hidden">Hidden. Use your sketch to identify objects and their interactions with evidence.</p>
+      <p class="rep-hidden" hidden>Hidden. Use your sketch to identify objects and their interactions with evidence.</p>
     </section>
     <section class="panel rep" data-rep="sketch" aria-labelledby="sk-h">
       <div class="rep-head"><h2 id="sk-h">Sketch</h2><button class="hide-btn" aria-pressed="false">Hide</button></div>
@@ -222,17 +226,18 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
       <p class="rep-hidden" hidden>Hidden. Sketch it from the other representations.</p>
     </section>
     <section class="panel rep" data-rep="fbd" aria-labelledby="fbd-h">
-      <div class="rep-head"><h2 id="fbd-h">Free Body Diagram (FBD)</h2><button class="hide-btn" aria-pressed="true">Show</button></div>
-      <div class="rep-body" hidden>
+      <div class="rep-head"><h2 id="fbd-h">Free Body Diagram (FBD)</h2><button class="hide-btn" aria-pressed="false">Hide</button></div>
+      <div class="rep-body">
         <svg id="fbd" viewBox="-200 -200 400 400" role="group" aria-label="Free body diagram"></svg>
         <p class="note">Click a force to bring it to the vector addition diagram. Until then its arrow shows direction only; once it’s in the VAD, its length here matches the VAD.</p>
         <ul class="force-key" id="force-key" aria-label="What each force label means"></ul>
       </div>
-      <p class="rep-hidden">Hidden. Use your system boundary and interactions from the ID to construct FBD.</p>
+      <p class="rep-hidden" hidden>Hidden. Use your system boundary and interactions from the ID to construct FBD.</p>
     </section>
     <section class="panel rep" data-rep="vad" aria-labelledby="vad-h">
-      <div class="rep-head"><h2 id="vad-h">Force Vector Addition Diagram (VAD)</h2><button class="hide-btn" aria-pressed="true">Show</button></div>
-      <div class="rep-body" hidden>
+      <div class="rep-head"><h2 id="vad-h">Force Vector Addition Diagram (VAD)</h2><span class="head-tools"><a class="ref-link" href="vad-reference.pdf" target="_blank" rel="noopener">VAD reference (PDF)</a><button class="hide-btn" aria-pressed="false">Hide</button></span></div>
+      <div class="rep-body">
+        <p class="vad-intro">Rearrange the vectors head-to-tail to add them. You can adjust the length until you think the result of the force vector addition is consistent with the motion of the pumpkin.</p>
         <div class="tools vad-tools">
           <label><input type="checkbox" id="rails"> Show lines of action</label>
           <button class="btn" id="restart">Start over</button>
@@ -244,7 +249,7 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
           <p id="hint" role="status" aria-live="polite"></p>
         </div>
       </div>
-      <p class="rep-hidden">Hidden. Arrange each force vector from your FBD head to tail to add the force vectors.</p>
+      <p class="rep-hidden" hidden>Hidden. Arrange each force vector from your FBD head to tail to add the force vectors.</p>
     </section>
   </div>
 
@@ -850,8 +855,8 @@ function setRepHidden(rep, hide){
 }
 document.querySelectorAll('.rep .hide-btn').forEach(btn => btn.addEventListener('click', () =>
   setRepHidden(btn.closest('.rep'), btn.getAttribute('aria-pressed') !== 'true')));
-// Each new scenario starts with only the Written Description and Sketch showing.
-const SHOWN_AT_START = ['desc', 'sketch'];
+// Each new scenario starts with every representation showing.
+const SHOWN_AT_START = ['desc', 'id', 'sketch', 'fbd', 'vad'];
 const resetReps = () => document.querySelectorAll('.rep').forEach(rep => setRepHidden(rep, !SHOWN_AT_START.includes(rep.dataset.rep)));
 
 function renderScenarios(){
@@ -1040,7 +1045,7 @@ function toggleForce(i){
   render();
 }
 function selectScenario(i, v = 0){
-  if (i !== si) resetReps();   // a new scenario (not the smooth/rough toggle) hides the ID, FBD and VAD again
+  if (i !== si) resetReps();   // a new scenario (not the smooth/rough toggle) shows every panel again
   si = i; vi = v; st.placed.clear(); renderScenarios(); render();
 }
 /* ---------- pointer interaction ---------- */
