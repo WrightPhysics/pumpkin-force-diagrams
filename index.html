@@ -139,6 +139,50 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--f0);outline-off
 .ring{fill:none;stroke-width:1.5;stroke-dasharray:3 3}
 .lbl{font-family:var(--math);fill:var(--ink)}
 .snap{fill:none;stroke:var(--ink);stroke-width:2}
+button.btn.btn-check{display:block;width:100%;margin-top:12px;padding:12px 14px;font-size:1.1rem;background:var(--accent);color:var(--panel);border-color:var(--accent)}
+button.btn.btn-check:hover{filter:brightness(1.12)}
+#check{margin-top:12px;border:1px solid var(--rule);border-radius:8px;background:var(--sheet);padding:10px 14px}
+#check ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+#check li{display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start}
+#check .mk{font-weight:700;font-size:1.1rem;line-height:1.35;text-align:center}
+#check .ok .mk{color:var(--good)} #check .no .mk{color:var(--bad)} #check .maybe .mk{color:var(--orange)} #check .wait .mk{color:var(--muted)}
+#check .wait{color:var(--muted)}
+#check .ttl{font-weight:700;display:block}
+#check .done{margin-top:10px;padding-top:8px;border-top:1px solid var(--rule);font-weight:700;display:flex;align-items:center;gap:8px}
+#check .done.good{color:var(--good)}
+#check .actual-note{margin:6px 0 0}
+.bad-ring{fill:none;stroke:var(--bad);stroke-width:3;opacity:.85}
+/* BYO Scenario */
+body.byo .layout{grid-template-areas:"id fbd" "vad vad"}
+body.byo .layout > [data-rep="desc"], body.byo .layout > [data-rep="sketch"]{display:none}
+@media (max-width:900px){body.byo .layout{grid-template-areas:"id" "fbd" "vad"}}
+.byo-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:0 0 16px;padding:12px 16px}
+.byo-field{display:flex;align-items:center;gap:6px;font-weight:700}
+.byo-bar input[type=text], .byo-id input[type=text], .byo-id select{font:inherit;padding:5px 8px;border:1.5px solid var(--rule);border-radius:6px;background:var(--sheet);color:var(--ink)}
+#byo-sys{width:9em}
+input.byo-letter{width:2.4em;text-align:center;text-transform:uppercase;font-weight:700}
+input.byo-letter.bad{border-color:var(--bad)}
+.byo-motion{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.byo-motion legend{float:left;font-weight:700;margin-right:8px;padding:0}
+.byo-bar #byo-reset{margin-left:auto}
+.byo-id{margin-top:10px;border-top:1px solid var(--rule);padding-top:8px}
+.byo-id h3{font-size:1rem;margin:10px 0 4px}
+.byo-id .muted{font-weight:400;color:var(--muted);font-size:.9rem}
+.byo-objs,.byo-pairs{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:8px}
+.byo-obj{border:1px solid var(--rule);border-radius:8px;padding:8px 10px;background:var(--sheet);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.byo-obj .nm{width:9em}
+.byo-ev{display:flex;flex-wrap:wrap;gap:6px}
+.byo-ev button{font:inherit;font-size:.9rem;padding:4px 10px;border-radius:999px;border:1.5px solid var(--rule);background:transparent;color:var(--muted);cursor:pointer}
+.byo-ev button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--panel);font-weight:700}
+.byo-x{margin-left:auto;font:inherit;font-weight:700;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px}
+.byo-x:hover{color:var(--bad)}
+.byo-pair{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.byo-pair.crossing{border-left:3px solid var(--accent);padding-left:8px}
+#byo-sys-pick{min-width:12em}
+body.byo #idg [data-obj]{cursor:pointer}
+body.byo #idg [data-obj]:hover .id-obj{stroke:var(--accent);stroke-width:2.5}
+.byo-fbd-note{fill:var(--muted);font-family:var(--body);font-size:15px}
+.byo-warn{color:var(--bad);font-weight:700;margin:6px 0 0;min-height:1.2em}
 .start-lbl{fill:var(--muted);font-family:var(--body);font-size:13px;font-weight:700}
 #hint{position:absolute;left:12px;right:12px;top:12px;margin:0;background:var(--ink);color:var(--panel);padding:8px 12px;border-radius:7px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .15s}
 #hint.show{opacity:1}
@@ -203,6 +247,13 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
     <button class="nav-btn" id="next" aria-label="Next scenario" title="Next scenario">→</button>
   </nav>
   <div class="var-row" id="vars" role="group" hidden></div>
+  <div class="byo-bar panel" id="byo-bar" hidden>
+    <fieldset class="byo-motion"><legend>Motion</legend>
+      <label><input type="radio" name="byo-dv" value="0" checked> Velocity not changing (Δ<i>v</i> = 0)</label>
+      <label><input type="radio" name="byo-dv" value="1"> Velocity changing (Δ<i>v</i> ≠ 0)</label>
+    </fieldset>
+    <button class="btn" id="byo-reset">Start over</button>
+  </div>
 
   <div class="layout">
     <section class="panel rep" data-rep="desc" aria-labelledby="desc-h">
@@ -218,6 +269,20 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
       <div class="rep-body">
         <svg id="idg" viewBox="0 0 360 270" role="img" aria-label="Interaction diagram"></svg>
         <p class="note">Each interaction that crosses the dashed system boundary is one force on the free body diagram.</p>
+        <div id="byo-id" class="byo-id" hidden>
+          <h3>1. Objects</h3>
+          <p class="note">List every object in the situation, with a one-letter label.</p>
+          <ul class="byo-objs" id="byo-objs"></ul>
+          <button class="btn" id="byo-add">+ Add object</button>
+          <h3>2. Interactions</h3>
+          <p class="note">For each pair of objects that interact, choose the evidence.</p>
+          <ul class="byo-pairs" id="byo-ints"></ul>
+          <button class="btn" id="byo-add-int">+ Add interaction</button>
+          <h3>3. System</h3>
+          <p class="note">Choose the system, or click its oval in the diagram. Each interaction that crosses its boundary becomes a force.</p>
+          <select id="byo-sys-pick" aria-label="System"></select>
+          <p class="byo-warn" id="byo-warn" role="status" aria-live="polite"></p>
+        </div>
         <p class="note" id="rope-note" hidden>There is not a field interaction between Earth and the rope because we need to treat our ropes as so light that they are essentially “massless” right now, thus not affected by Earth’s gravitational field.</p>
       </div>
       <p class="rep-hidden" hidden>Hidden. Use your sketch to identify objects and their interactions with evidence.</p>
@@ -250,6 +315,8 @@ button:focus-visible,input:focus-visible,.scn-row select:focus-visible{outline-c
           <svg id="vad" aria-label="Vector addition diagram workspace"></svg>
           <p id="hint" role="status" aria-live="polite"></p>
         </div>
+        <button class="btn btn-check" id="check-btn">Check my VAD</button>
+        <div id="check" aria-live="polite" hidden></div>
       </div>
       <p class="rep-hidden" hidden>Hidden. Arrange each force vector from your FBD head to tail to add the force vectors.</p>
     </section>
@@ -276,8 +343,8 @@ const START_LEN = 2;    // grid squares: starting length of every other force
 // Where the 2nd, 3rd, ... forces land (their midpoints, in grid squares from the center), clear of the centered first force.
 const SLOTS = [[-3.5,3],[3.5,3],[-3.5,-3],[3.5,-3]];
 const CLOSE_TOL = 0.25; // grid units: a VAD this close to its start counts as ending where it started
-const MSG_BALANCED = 'When these force vectors are added head to tail, the diagram ends where it started, so the <strong>result of all the forces exerted on the pumpkin</strong> is <span class="yes">“<strong>nothing</strong>.”</span>';
-const MSG_UNBALANCED = 'When these force vectors are added head to tail, the diagram doesn’t end where it started, so the <strong>result of all the forces exerted on the pumpkin</strong> is <span class="no"><strong>NOT</strong> “<strong>nothing</strong>.”</span>';
+const MSG_BALANCED = () => `When these force vectors are added head to tail, the diagram ends where it started, so the <strong>result of all the forces exerted on the ${sysN()}</strong> is <span class="yes">“<strong>nothing</strong>.”</span>`;
+const MSG_UNBALANCED = () => `When these force vectors are added head to tail, the diagram doesn’t end where it started, so the <strong>result of all the forces exerted on the ${sysN()}</strong> is <span class="no"><strong>NOT</strong> “<strong>nothing</strong>.”</span>`;
 
 // Interaction diagram layouts shared by several scenarios.
 const ID_LEVEL2 = { sys:"P",
@@ -288,50 +355,50 @@ const ID_HILL2 = { sys:"P",
   ints:[{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"H",b:"P",type:"compression",f:1,bend:20},{a:"E",b:"H",type:"field",bend:-20}] };
 
 const SCN = [
-  { name:"Pumpkin is motionless",
+  { dv0:true, name:"Pumpkin is motionless",
     key:"P = pumpkin, G = ground, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"G",ang:90}],
     id:ID_LEVEL2 },
-  { name:"Pumpkin is sliding at a <em>constant</em> velocity",
+  { dv0:true, name:"Pumpkin is sliding at a <em>constant</em> velocity",
     key:"P = pumpkin, G = ground, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"G",ang:90}],
     id:ID_LEVEL2 },
-  { name:"Pumpkin is slowing down on a rough surface",
+  { dv0:false, mags:[1, 1, 0.3], name:"Pumpkin is slowing down on a rough surface",
     key:"P = pumpkin, G = ground, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, G:{name:"Ground (G)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
       ints:[{a:"G",b:"P",type:"compression",f:1,bend:-34},{a:"G",b:"P",type:"shear",f:2,bend:34},{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"E",b:"G",type:"field",bend:-20}] } },
-  { name:"Pumpkin is sliding down a smooth hill",
+  { dv0:false, mags:[1, Math.cos(Math.PI/6)], name:"Pumpkin is sliding down a smooth hill",
     key:"P = pumpkin, H = hill, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:60}],
     id:ID_HILL2 },
-  { name:"Pumpkin is at rest on a rough hill",
+  { dv0:true, name:"Pumpkin is at rest on a rough hill",
     key:"P = pumpkin, H = hill, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:60},{t:"f",on:"P",by:"H",ang:150}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:95,y:65}, H:{name:"Hill (H)",x:265,y:125}, E:{name:"Earth (E)",x:115,y:225} },
       ints:[{a:"H",b:"P",type:"compression",f:1,bend:-34},{a:"H",b:"P",type:"shear",f:2,bend:34},{a:"E",b:"P",type:"field",f:0,bend:-30},{a:"E",b:"H",type:"field",bend:-20}] } },
-  { name:"Pumpkin is hanging from a rope",
+  { dv0:true, name:"Pumpkin is hanging from a rope",
     key:"P = pumpkin, R = rope, C = ceiling, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"R",ang:90}],
     id:{ sys:"P",
       objs:{ C:{name:"Ceiling (C)",x:90,y:38}, R:{name:"Rope (R)",x:90,y:135}, P:{name:"Pumpkin (P)",x:90,y:228}, E:{name:"Earth (E)",x:270,y:135} },
       ints:[{a:"R",b:"P",type:"extension",f:1,bend:0},{a:"C",b:"R",type:"extension",bend:0},{a:"E",b:"P",type:"field",f:0,bend:-20},{a:"E",b:"C",type:"field",bend:20}] } },
-  { name:"Pumpkin is hanging by two ropes",
+  { dv0:true, name:"Pumpkin is hanging by two ropes",
     key:"P = pumpkin, L = left rope, R = right rope, C = ceiling, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"L",ang:120},{t:"T",on:"P",by:"R",ang:30}],
     id:{ sys:"P",
       objs:{ C:{name:"Ceiling (C)",x:180,y:32}, L:{name:"Left rope (L)",x:62,y:125}, E:{name:"Earth (E)",x:180,y:125}, R:{name:"Right rope (R)",x:298,y:125}, P:{name:"Pumpkin (P)",x:180,y:222} },
       ints:[{a:"L",b:"P",type:"extension",f:1,bend:-34},{a:"R",b:"P",type:"extension",f:2,bend:34},{a:"C",b:"L",type:"extension",bend:22},{a:"C",b:"R",type:"extension",bend:-22},
             {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"C",type:"field",bend:0}] } },
-  { name:"Pumpkin is in free fall (negligible air resistance)",
+  { dv0:false, mags:[1], name:"Pumpkin is in free fall (negligible air resistance)",
     key:"P = pumpkin, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:180,y:70}, E:{name:"Earth (E)",x:180,y:205} },
       ints:[{a:"E",b:"P",type:"field",f:0,bend:0}] } },
-  { name:"Pumpkin is at rest",
+  { dv0:true, name:"Pumpkin is at rest",
     toggle:"Hill surface",
     key:"P = pumpkin, H = hill, B = block, E = Earth",
     vars:[
@@ -347,7 +414,7 @@ const SCN = [
           objs:{ P:{name:"Pumpkin (P)",x:95,y:120}, B:{name:"Block (B)",x:275,y:40}, H:{name:"Hill (H)",x:275,y:185}, E:{name:"Earth (E)",x:110,y:240} },
           ints:[{a:"H",b:"P",type:"compression",f:1,bend:-30},{a:"H",b:"P",type:"shear",f:3,bend:30},{a:"B",b:"P",type:"compression",f:2,bend:20},{a:"B",b:"H",type:"compression",bend:0},
                 {a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:20}] } } ] },
-  { name:"Pumpkin is pulled upward, using a rope on a pulley, at a <em>constant</em> velocity",
+  { dv0:true, name:"Pumpkin is pulled upward, using a rope on a pulley, at a <em>constant</em> velocity",
     key:"P = pumpkin, R = rope, W = pulley, C = ceiling, H = Headless Horseman, G = ground, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"R",ang:90}],
     id:{ sys:"P",
@@ -355,17 +422,17 @@ const SCN = [
              H:{name:"Horseman (H)",x:250,y:128}, G:{name:"Ground (G)",x:300,y:232}, E:{name:"Earth (E)",x:172,y:236} },
       ints:[{a:"R",b:"P",type:"extension",f:1,bend:0},{a:"W",b:"R",type:"compression",bend:-18},{a:"C",b:"W",type:"extension",bend:0},{a:"R",b:"H",type:"extension",bend:14},
             {a:"H",b:"G",type:"compression",bend:0},{a:"E",b:"P",type:"field",f:0,bend:0},{a:"E",b:"H",type:"field",bend:-18},{a:"E",b:"G",type:"field",bend:0}] } },
-  { num:"11a", name:"Pumpkin is sliding up a smooth hill, slowing down",
+  { dv0:false, mags:[1, Math.cos(Math.PI/6)], num:"11a", name:"Pumpkin is sliding up a smooth hill, slowing down",
     key:"P = pumpkin, H = hill, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"N",on:"P",by:"H",ang:120}],
     id:ID_HILL2 },
-  { num:"11b", name:"Pumpkin is falling at a <em>constant</em> velocity (air resistance is not negligible)",
+  { dv0:true, num:"11b", name:"Pumpkin is falling at a <em>constant</em> velocity (air resistance is not negligible)",
     key:"P = pumpkin, A = air, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"D",on:"P",by:"A",ang:90}],
     id:{ sys:"P",
       objs:{ P:{name:"Pumpkin (P)",x:110,y:75}, A:{name:"Air (A)",x:285,y:95}, E:{name:"Earth (E)",x:160,y:225} },
       ints:[{a:"A",b:"P",type:"compression",f:1,bend:-20},{a:"E",b:"P",type:"field",f:0,bend:0}] } },
-  { num:"11c", name:"Pumpkin is held at rest against a rough wall",
+  { dv0:true, num:"11c", name:"Pumpkin is held at rest against a rough wall",
     key:"P = pumpkin, H = Headless Horseman, W = wall, G = ground, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"P",on:"P",by:"H",ang:0},{t:"N",on:"P",by:"W",ang:180},{t:"f",on:"P",by:"W",ang:90}],
     id:{ sys:"P",
@@ -373,7 +440,7 @@ const SCN = [
       ints:[{a:"H",b:"P",type:"compression",f:1,bend:0},{a:"W",b:"P",type:"compression",f:2,bend:-28},{a:"W",b:"P",type:"shear",f:3,bend:28},
             {a:"E",b:"P",type:"field",f:0,bend:0},{a:"G",b:"H",type:"compression",bend:-22},{a:"G",b:"H",type:"shear",bend:22},
             {a:"E",b:"H",type:"field",bend:30},{a:"E",b:"G",type:"field",bend:0}] } },
-  { num:"11d", name:"Pumpkin is pulled across rough ground and speeds up",
+  { dv0:false, mags:[1, 0.6, 0.7, 0.28], num:"11d", name:"Pumpkin is pulled across rough ground and speeds up",
     key:"P = pumpkin, R = rope, H = Headless Horseman, G = ground, E = Earth",
     forces:[{t:"g",on:"P",by:"E",ang:270},{t:"T",on:"P",by:"R",ang:30},{t:"N",on:"P",by:"G",ang:90},{t:"f",on:"P",by:"G",ang:180}],
     id:{ sys:"P",
@@ -387,7 +454,7 @@ const SCN = [
 const $ = s => document.querySelector(s);
 const vad = $('#vad'), fbd = $('#fbd');
 let si = 0, vi = 0;
-const st = { placed:new Map(), anchor:null, seq:0, rails:false, ang:{ h:false, v:false, b:false }, angFBD:true, angVAD:true };
+const st = { placed:new Map(), anchor:null, seq:0, check:null, rails:false, ang:{ h:false, v:false, b:false }, angFBD:true, angVAD:true };
 let drag = null, snapPt = null, S = 40, CX = 0, CY = 0, lastTap = {}, hintTimer = null;
 
 const sc = () => { const s = SCN[si]; return s.vars ? { ...s, ...s.vars[vi] } : s; };
@@ -441,16 +508,28 @@ function links(){
     for (const q of arr) if (q.id!==p.id && !m.has(p.id) && dist(t,[q.x,q.y]) < 0.05) { m.set(p.id,q.id); inc.set(q.id,(inc.get(q.id)||0)+1); } }
   return { m, inc };
 }
+// An order of the placed arrows in which each tail sits on the head of the one before (anchor first when possible),
+// or null. Tries every order (at most 5 forces), so a chain that passes back through the same point, like
+// F_gPE down then F_NPG back up to the start, still counts as one chain.
+function chainOrder(){
+  const arr = [...st.placed.values()];
+  if (arr.length <= 1) return arr.map(p => p.id);
+  const joins = (a, b) => dist(tipOf(a), [b.x, b.y]) < 0.05;
+  const firsts = [...arr].sort((a, b) => (isAnchor(b.id) ? 1 : 0) - (isAnchor(a.id) ? 1 : 0));
+  const walk = (path, left) => {
+    if (!left.length) return path;
+    const last = path.at(-1);
+    for (const q of left) if (joins(last, q)) { const r = walk([...path, q], left.filter(x => x !== q)); if (r) return r; }
+    return null;
+  };
+  for (const a of firsts) { const r = walk([a], arr.filter(x => x !== a)); if (r) return r.map(p => p.id); }
+  return null;
+}
 function analyze(){
   const arr = [...st.placed.values()], n = arr.length, sum = [0,0];
   arr.forEach(p => { const u = dir(F(p.id)); sum[0]+=u[0]*p.len; sum[1]+=u[1]*p.len; });
   if (!n) return { n, connected:false, sum };
-  const { m, inc } = links();
-  let start = arr.find(p => !inc.has(p.id)); if (!start) start = arr[0];
-  const order = [start.id], seen = new Set([start.id]); let j = m.get(start.id);
-  while (j != null && !seen.has(j)) { order.push(j); seen.add(j); j = m.get(j); }
-  const connected = order.length === n && [...inc.values()].every(c => c === 1);
-  return { n, connected, sum };
+  return { n, connected: !!chainOrder(), sum };
 }
 // Forces joined head-to-tail in a chain that starts at the anchor (the anchor itself not included).
 function chainFromAnchor(){
@@ -778,7 +857,7 @@ const SKETCH = [
     skT(74,106,'Pumpkin (P)') + skT(170,108,'Rope (R)','sk-lbl','end') + horseman(236,102,'start') +
     skT(160,198,'rough surface','sk-note') + skT(14,202,'Ground (G)','sk-lbl','start')
 ];
-function renderSketch(){ $('#sketch').innerHTML = SKETCH[si](sc()); }
+function renderSketch(){ if (!sc().byo) $('#sketch').innerHTML = SKETCH[si](sc()); }
 
 /* ---------- interaction diagram ---------- */
 function renderID(){
@@ -788,8 +867,8 @@ function renderID(){
   const bez = (c,t) => { const m=1-t; return [m*m*m*c[0][0]+3*m*m*t*c[1][0]+3*m*t*t*c[2][0]+t*t*t*c[3][0], m*m*m*c[0][1]+3*m*m*t*c[1][1]+3*m*t*t*c[2][1]+t*t*t*c[3][1]]; };
   const segs = [], boxes = [], blobs = [];
   for (const o of Object.values(O)) boxes.push({ x0:o.x-o.rx, y0:o.y-o.ry, x1:o.x+o.rx, y1:o.y+o.ry });
-  const sysO = O[D.sys], srx = sysO.rx + 9, sry = sysO.ry + 9;
-  for (let k = 0; k < 24; k++) {
+  const sysO = D.sys ? O[D.sys] : null, srx = sysO ? sysO.rx + 9 : 0, sry = sysO ? sysO.ry + 9 : 0;
+  for (let k = 0; sysO && k < 24; k++) {
     const a0 = k/24*2*Math.PI, a1 = (k+1)/24*2*Math.PI;
     segs.push([[sysO.x+srx*Math.cos(a0), sysO.y+sry*Math.sin(a0)], [sysO.x+srx*Math.cos(a1), sysO.y+sry*Math.sin(a1)]]);
   }
@@ -804,14 +883,20 @@ function renderID(){
       const n = [Math.cos(t)/Ob.rx, Math.sin(t)/Ob.ry], nl = Math.hypot(n[0], n[1]);
       return { p:pnt, n:[n[0]/nl, n[1]/nl] };
     };
-    const a = end(A), b = end(B), Dd = Math.hypot(b.p[0]-a.p[0], b.p[1]-a.p[1]), k = Dd*0.42;
-    const c = [a.p, [a.p[0]+a.n[0]*k, a.p[1]+a.n[1]*k], [b.p[0]+b.n[0]*k, b.p[1]+b.n[1]*k], b.p];
+    const a = end(A), b = end(B), Dd = Math.hypot(b.p[0]-a.p[0], b.p[1]-a.p[1]);
+    const w = 2, [hl, hw] = headDims(Dd, 2.4);
+    // Each end is a short straight run perpendicular to its oval, longer than the arrowhead, so the head
+    // always sits on a straight line (a curve that is only perpendicular at its last pixel can blend into one barb).
+    const stub = Math.min(hl + 7, Dd*0.25), k = Math.max(Dd - 2*stub, 0)*0.42;
+    const a0 = [a.p[0]+a.n[0]*stub, a.p[1]+a.n[1]*stub], b0 = [b.p[0]+b.n[0]*stub, b.p[1]+b.n[1]*stub];
+    const c = [a0, [a0[0]+a.n[0]*k, a0[1]+a.n[1]*k], [b0[0]+b.n[0]*k, b0[1]+b.n[1]*k], b0];
+    segs.push([a.p, a0], [b0, b.p]);
+    blobs.push([a.p[0]+a.n[0]*hl*0.5, a.p[1]+a.n[1]*hl*0.5, hl*0.7+3], [b.p[0]+b.n[0]*hl*0.5, b.p[1]+b.n[1]*hl*0.5, hl*0.7+3]);   // keep labels off the arrowheads
     let prev = c[0];
     for (let q = 1; q <= 12; q++) { const pt = bez(c, q/12); segs.push([prev, pt]); prev = pt; }
     const crossing = it.f != null;
     const col = crossing ? `var(--f${it.f})` : 'var(--muted)';
-    const w = 2, [hl, hw] = headDims(Dd, 2.4);
-    const d = `M${r1(c[0][0])},${r1(c[0][1])} C${r1(c[1][0])},${r1(c[1][1])} ${r1(c[2][0])},${r1(c[2][1])} ${r1(c[3][0])},${r1(c[3][1])}`;
+    const d = `M${r1(a.p[0])},${r1(a.p[1])} L${r1(a0[0])},${r1(a0[1])} C${r1(c[1][0])},${r1(c[1][1])} ${r1(c[2][0])},${r1(c[2][1])} ${r1(b0[0])},${r1(b0[1])} L${r1(b.p[0])},${r1(b.p[1])}`;
     curves += `<g class="id-int"${crossing ? ` data-f="${it.f}"` : ''}>`+
       `<path class="id-curve" d="${d}" fill="none" stroke="${col}" stroke-width="${w}"/>`+
       `<path d="${d}" fill="none" stroke="transparent" stroke-width="16"/>`+
@@ -820,9 +905,9 @@ function renderID(){
     // label candidates: beside the curve, preferring the outside of its bend
     const tw0 = tw(`italic 12px ${BODY}`, it.type) + 6, th = 16, cands = [];
     const side0 = it.bend >= 0 ? 1 : -1;
-    for (const t of [0.5, 0.4, 0.6, 0.3, 0.7])
+    for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8])
       for (const side of [side0, -side0])
-        for (const off of [4, 12, 22]) {
+        for (const off of [4, 12, 22, 34, 48]) {
           const p0 = bez(c, t), p1 = bez(c, t+0.01), tx = p1[0]-p0[0], ty = p1[1]-p0[1], tl = Math.hypot(tx,ty) || 1;
           const nx = -ty/tl*side, ny = tx/tl*side;
           const ext = Math.abs(nx)*tw0/2 + Math.abs(ny)*th/2;
@@ -836,10 +921,10 @@ function renderID(){
     return `<text class="id-type lab"${l.f != null ? ` data-f="${l.f}"` : ''} x="${r1((r.x0+r.x1)/2)}" y="${r1((r.y0+r.y1)/2)}" text-anchor="middle" dominant-baseline="middle" style="fill:${l.col}">${l.text}</text>`;
   }).join('');
   let objs = '';
-  for (const o of Object.values(O))
-    objs += `<ellipse class="id-obj" cx="${o.x}" cy="${o.y}" rx="${r1(o.rx)}" ry="${o.ry}"/>`+
-      `<text class="id-name" x="${o.x}" y="${o.y}" text-anchor="middle" dominant-baseline="middle">${o.name}</text>`;
-  const sys = `<ellipse class="id-sys" cx="${sysO.x}" cy="${sysO.y}" rx="${r1(srx)}" ry="${sry}"/>`;
+  for (const [key, o] of Object.entries(O))
+    objs += `<g${sc().byo ? ` data-obj="${key}"` : ''}><ellipse class="id-obj" cx="${o.x}" cy="${o.y}" rx="${r1(o.rx)}" ry="${o.ry}"/>`+
+      `<text class="id-name" x="${o.x}" y="${o.y}" text-anchor="middle" dominant-baseline="middle">${esc(o.name)}</text></g>`;
+  const sys = sysO ? `<ellipse class="id-sys" cx="${sysO.x}" cy="${sysO.y}" rx="${r1(srx)}" ry="${sry}"/>` : '';
   svg.innerHTML = curves + objs + sys + lab;
   $('#rope-note').hidden = !Object.values(D.objs).some(o => /rope/i.test(o.name));
 }
@@ -873,8 +958,10 @@ const resetReps = () => document.querySelectorAll('.rep').forEach(rep => setRepH
 
 function renderScenarios(){
   const pick = $('#scns');
-  if (!pick.options.length) pick.innerHTML = SCN.map((s,i) =>
+  if (!pick.options.length) pick.innerHTML = SCN.map((s,i) => s.byo ? `<option value="${i}">BYO Scenario</option>` :
     `<option value="${i}">Scenario ${s.num ?? i+1}: ${s.name.replace(/<[^>]+>/g, '')}</option>`).join('');
+  const byo = !!SCN[si].byo;
+  document.body.classList.toggle('byo', byo); $('#byo-bar').hidden = !byo; $('#byo-id').hidden = !byo;
   pick.value = si;
   $('#prev').disabled = si === 0; $('#next').disabled = si === SCN.length - 1;
   const base = SCN[si], vr = $('#vars');
@@ -938,7 +1025,9 @@ function renderFBD(){
     under = am.svg;
     over = am.labels.map(a => angText(place(a.cands, a.w, a.hh), a)).join('');
   }
-  fbd.innerHTML = under + h + `<circle r="8" fill="var(--ink)"/>` + over;
+  fbd.innerHTML = sc().byo && !BYO.id.sys
+    ? `<text x="0" y="0" text-anchor="middle" dominant-baseline="middle" class="byo-fbd-note">Choose the system in step 3 of the ID builder.</text>`
+    : under + h + `<circle r="8" fill="var(--ink)"/>` + over;
   if (hl != null) applyHL();
 }
 // "F_TPR = Tension Force Exerted ON the Pumpkin BY the Rope", with the type, on and by letters in bold.
@@ -1024,6 +1113,7 @@ function renderVAD(){
     lh += `<g class="lab">${svgLabel(g.f, (r.x0+r.x1)/2, (r.y0+r.y1)/2 - 3, 'middle', 18, g.col)}</g>`;
   });
   h += lh;
+  if (st.check && st.check.sig === placedSig()) st.check.pts.forEach(q => { const c = P(...q); h += `<circle class="bad-ring" cx="${r1(c[0])}" cy="${r1(c[1])}" r="13"/>`; });
   // "start" at the tail of the first (anchor) force, just behind it along its line.
   if (isAnchor(st.anchor)) {
     const a = st.placed.get(st.anchor), t = P(a.x, a.y), tp = P(...tipOf(a)), L = Math.hypot(tp[0]-t[0], tp[1]-t[1]) || 1;
@@ -1041,8 +1131,9 @@ function updateStatus(){
   if (!A.n) msg = 'Click a force on the free body diagram to bring it here.';
   else if (A.n < total) msg = `${A.n} of ${total} forces placed. Bring over the rest.`;
   else if (!A.connected) msg = 'Join every arrow head-to-tail. Drag an arrow near another’s head and it snaps into place.';
-  else msg = Math.hypot(...A.sum) < CLOSE_TOL ? MSG_BALANCED : MSG_UNBALANCED;
+  else msg = Math.hypot(...A.sum) < CLOSE_TOL ? MSG_BALANCED() : MSG_UNBALANCED();
   $('#msg').innerHTML = msg;
+  clearStaleCheck();
 }
 function render(){ renderSketch(); renderID(); renderFBD(); renderForceKey(); renderChips(); renderVAD(); updateStatus(); applyHL(); }
 
@@ -1051,6 +1142,282 @@ function showHint(text, sticky=false){
   clearTimeout(hintTimer); if (!sticky) hintTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 function hideHint(){ clearTimeout(hintTimer); $('#hint').classList.remove('show'); }
+
+
+/* ---------- BYO Scenario ----------
+   The last scenario is built in class, in the order the ID is built on paper: (1) the objects, (2) the
+   interactions between them, with their evidence, (3) the system, which draws the boundary. syncBYO() rewrites
+   BYO's forces / id / key / dv0 from st.byo, so the ID, FBD, VAD and check work exactly as for the built-in
+   scenarios. No written description or sketch: those happen on the board. */
+const BYO = { byo:true, dv0:true, name:'BYO Scenario', key:'', forces:[], id:{ sys:null, objs:{}, ints:[] } };
+// BYO is held back until step 2 (setting force directions on the FBD) is built; it lives on the byo-wip branch.
+// To turn it on, push it onto the scenario list: SCN.push(BYO);
+const EVIDENCE = ['field', 'compression', 'extension', 'shear'];
+const FORCE_OF = { field:'g', extension:'T', shear:'f' };          // compression: the interaction's cType (N, P or D)
+const DEF_ANG = { g:270, N:90, T:90, f:180, P:0, D:90 };          // starting directions, set properly on the FBD
+const MAX_FORCES = 5;                                              // one force color each (--f0 … --f4)
+let byoUid = 0;
+const byoObj = (name, letter) => ({ uid:++byoUid, name, letter });
+const isEarth = o => /^earth$/i.test(o.name.trim());
+const byoFresh = () => ({ dv0:true, objs:[byoObj('Earth', 'E')], ints:[], sys:null, dirs:{} });
+st.byo = byoFresh();
+const byoSys = () => st.byo.objs.find(o => o.uid === st.byo.sys) || null;
+// The system's name as it reads in sentences ("the pumpkin", "the sled").
+const sysN = () => sc().byo ? ((byoSys() && byoSys().name.trim()) || 'system').toLowerCase() : 'pumpkin';
+// Interactions with the system become forces (crossing the boundary); the rest stay gray.
+const crossesSys = it => st.byo.sys != null && (it.a === st.byo.sys || it.b === st.byo.sys);
+const validInt = it => it.a !== it.b && st.byo.objs.some(o => o.uid === it.a) && st.byo.objs.some(o => o.uid === it.b);
+
+function syncBYO(){
+  const b = st.byo, sys = byoSys(), byUid = new Map(b.objs.map(o => [o.uid, o]));
+  const ints = b.ints.filter(validInt);
+  const forces = [];
+  ints.forEach(it => {
+    if (!crossesSys(it) || forces.length >= MAX_FORCES) return;
+    const other = byUid.get(it.a === b.sys ? it.b : it.a);
+    const t = it.type === 'compression' ? (it.cType || 'N') : FORCE_OF[it.type];
+    forces.push({ t, on:sys.letter || '?', by:other.letter || '?', ang: b.dirs[it.uid] ?? DEF_ANG[t], k:String(it.uid), iu:it.uid });
+  });
+  // ID layout. With a system: it sits in the middle, Earth straight below, the others over the top of a ring.
+  // Before one is chosen: every object on a ring, Earth at the bottom.
+  const objs = {}, place = (o, x, y) => {
+    const nm = `${o.name || 'Object'} (${o.letter || '?'})`, half = Math.max(34, tw(`12.5px ${BODY}`, nm)/2 + 13);
+    objs[`u${o.uid}`] = { name:nm, x:Math.min(358-half, Math.max(half+2, x)), y:Math.min(250, Math.max(20, y)) };
+  };
+  const ring = b.objs.filter(o => o !== sys), earth = ring.find(isEarth), rest = ring.filter(o => o !== earth);
+  const cy = sys ? 128 : 135, rx = 122, ry = sys ? 92 : 100, k = rest.length;
+  if (sys) place(sys, 180, cy);
+  if (earth) place(earth, 180, cy + ry);
+  const step = earth ? Math.min(sys ? 90 : 100, (sys ? 270 : 300) / Math.max(k, 1)) : 360 / Math.max(k, 1);
+  rest.forEach((o, j) => {
+    const a = (earth ? -90 + (j - (k - 1)/2)*step : -90 + j*step) * Math.PI/180;
+    place(o, 180 + rx*Math.cos(a), cy + ry*Math.sin(a));
+  });
+  // Several interactions between the same two objects spread out with alternating bends.
+  const spread = n => n === 1 ? [0] : n === 2 ? [-30, 30] : n === 3 ? [-38, 0, 38] : [-48, -16, 16, 48];
+  const pairKey = it => [it.a, it.b].sort((x, y) => x - y).join('-'), count = {}, seen = {};
+  ints.forEach(it => { const kk = pairKey(it); count[kk] = (count[kk] || 0) + 1; });
+  const idInts = ints.map(it => {
+    const kk = pairKey(it), n = seen[kk] = (seen[kk] || 0) + 1, fi = forces.findIndex(f => f.iu === it.uid);
+    return { a:`u${it.a}`, b:`u${it.b}`, type:it.type, bend:spread(count[kk])[n - 1], ...(fi >= 0 ? { f:fi } : {}) };
+  });
+  BYO.forces = forces; BYO.dv0 = b.dv0;
+  BYO.id = { sys: sys ? `u${sys.uid}` : null, objs, ints:idInts };
+  BYO.key = b.objs.map(o => `${o.letter || '?'} = ${o.name || 'Object'}`).join(', ');
+}
+
+/* ---------- Check my VAD ----------
+   Three steps, each shown only once the one before passes: (1) every force, joined head to tail in one chain;
+   (2) the result agrees with the motion map: ends where it started <=> Δv = 0 (the scenario's dv0 flag);
+   (3) overall. Unbalanced VADs are judged only on not closing: no gap direction or lengths, so the check
+   never previews the link between the result of the forces and how the velocity changes. */
+const NEAR_TOL = 0.5;   // grid squares: a Δv ≠ 0 VAD whose gap is smaller than this is "almost" closed
+const LINK_TOL = 0.05;
+const near = (a, b) => dist(a, b) < LINK_TOL;
+const nm = p => htmlLabel(F(p.id));
+const placedSig = () => [...st.placed.values()].map(p => `${p.id}:${p.x.toFixed(3)},${p.y.toFixed(3)},${p.len.toFixed(3)}`).sort().join('|') + `#${si}.${vi}`;
+const PK_SVG = '<svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="24" rx="17" ry="13" fill="#F39A45" stroke="#7A3A0A" stroke-width="1.6"/><ellipse cx="20" cy="24" rx="7" ry="13" fill="none" stroke="#7A3A0A" stroke-opacity=".55" stroke-width="1.3"/><path d="M19 11.5Q19 6 24 4" fill="none" stroke="#6FA83E" stroke-width="3.2" stroke-linecap="round"/></svg>';
+
+function checkChain(){
+  const total = sc().forces.length, arr = [...st.placed.values()], pts = [];
+  if (!arr.length) return { ok:false, msg:'Bring the forces from the free body diagram into the VAD first: click each force on the FBD.', pts };
+  if (arr.length < total) {
+    const miss = sc().forces.map((f, i) => i).filter(i => !st.placed.has(i)).map(i => htmlLabel(F(i)));
+    return { ok:false, msg:`Your FBD has ${total} forces, but your VAD has ${arr.length}. Every force from the FBD goes in the VAD once. Still missing: ${miss.join(', ')}.`, pts };
+  }
+  if (total === 1) return { ok:true, msg:'There is only one force, so that one arrow is the whole VAD.', pts };
+  const T = p => [p.x, p.y], H = p => tipOf(p);
+  const next = new Map(arr.map(p => [p.id, arr.filter(q => q !== p && near(H(p), T(q)))]));
+  const prev = new Map(arr.map(q => [q.id, arr.filter(p => p !== q && near(H(p), T(q)))]));
+  if (chainOrder()) return { ok:true, msg:'Every force from the FBD is in the VAD, and each tail sits on the head of the arrow before it.', pts };
+  for (const p of arr) for (const q of arr) {
+    if (p.id >= q.id) continue;
+    if (near(H(p), H(q))) return { ok:false, msg:`${nm(p)} and ${nm(q)} meet <strong>head to head</strong>. In a VAD, each tail goes on the head of the arrow before it.`, pts:[H(p)] };
+    if (near(T(p), T(q)) && !prev.get(p.id).length && !prev.get(q.id).length)
+      return { ok:false, msg:`${nm(p)} and ${nm(q)} start from the same point (<strong>tail to tail</strong>). In a VAD, each tail goes on the head of the arrow before it.`, pts:[T(p)] };
+  }
+  for (const p of arr) if (next.get(p.id).length > 1) {
+    const [a, b] = next.get(p.id);
+    return { ok:false, msg:`${nm(a)} and ${nm(b)} both start from the head of ${nm(p)}. Only one arrow can follow each force.`, pts:[H(p)] };
+  }
+  for (const q of arr) if (prev.get(q.id).length > 1) {
+    const [a, b] = prev.get(q.id);
+    return { ok:false, msg:`${nm(a)} and ${nm(b)} both end at the tail of ${nm(q)}. Only one arrow can come before each force.`, pts:[T(q)] };
+  }
+  const loose = arr.find(p => !next.get(p.id).length && !prev.get(p.id).length);
+  if (loose) return { ok:false, msg:`${nm(loose)} isn’t joined to the others. Put its tail on the head of another arrow.`, pts:[T(loose)] };
+  const starts = arr.filter(p => !prev.get(p.id).length);
+  return { ok:false, msg:`Your arrows form ${starts.length} separate chains. Join them into one chain, with each tail on the head of the arrow before it.`, pts:starts.map(T) };
+}
+
+function checkMotion(){
+  const A = analyze(), gap = Math.hypot(...A.sum), closed = gap < CLOSE_TOL, still = sc().dv0;
+  const a = st.placed.get(st.anchor), startPt = a ? [a.x, a.y] : [0, 0], end = [startPt[0] + A.sum[0], startPt[1] + A.sum[1]];
+  if (still && closed) return { ok:true, msg:`Your VAD ends where it started, so the result of all the forces is “nothing.” That fits the motion map: the ${sysN()}’s velocity is not changing.`, pts:[] };
+  if (still) return { ok:false, msg:`Your VAD doesn’t end where it started. Look at the motion map: is the ${sysN()}’s velocity changing? If not, adjust the lengths until your VAD ends where it started.`, pts:[startPt, end] };
+  if (closed) return { ok:false, msg:`Your VAD ends where it started, so the result of all the forces is “nothing.” But the motion map shows the ${sysN()}’s velocity changing. Which force could be longer or shorter?`, pts:[startPt] };
+  if (gap < NEAR_TOL) return { ok:false, maybe:true, msg:`Your VAD <strong>almost</strong> ends where it started. Is that what the motion map shows? Make it clearly end where it started, or clearly not.`, pts:[startPt, end] };
+  return { ok:true, msg:`Your VAD doesn’t end where it started, so the result of all the forces is NOT “nothing.” That fits the motion map: the ${sysN()}’s velocity is changing.`, pts:[] };
+}
+
+// Δv ≠ 0 and built correctly: the student did all the BFPM model can do, so show the actual lengths
+// (scenario mags, in units of the weight; friction values are representative). Keeps their chain order and the
+// centered first force; the whole VAD is scaled down only if it would run off the grid.
+function showActualLengths(){
+  const order = chainOrder(), mags = sc().mags; if (!order || !mags) return;
+  const W = vad.clientWidth || 600, H = vad.clientHeight || 420, hx = W/2/S - 0.6, hy = H/2/S - 0.6;
+  let k = REF_LEN / mags[st.anchor];               // first force stays length 4 when the VAD fits
+  const lay = scale => {                            // chain points, anchor centered on the grid
+    const a = st.placed.get(order[0]), ua = dir(F(a.id)), La = mags[a.id]*scale;
+    let x = -ua[0]*La/2, y = -ua[1]*La/2; const pts = [[x, y]], seg = [];
+    for (const id of order) { const u = dir(F(id)), L = mags[id]*scale; seg.push({ id, x, y, L }); x += u[0]*L; y += u[1]*L; pts.push([x, y]); }
+    return { seg, pts };
+  };
+  let r = lay(k);
+  const ext = Math.max(...r.pts.map(q => Math.max(Math.abs(q[0])/hx, Math.abs(q[1])/hy)));
+  if (ext > 1) { k /= ext; r = lay(k); }
+  r.seg.forEach(sg => { const p = st.placed.get(sg.id); p.x = sg.x; p.y = sg.y; p.len = sg.L; });
+}
+function runCheck(){
+  const c1 = checkChain(); let c2 = c1.ok ? checkMotion() : null;
+  if (c2 && c2.ok && !sc().dv0 && st.placed.size > 1 && sc().mags) {
+    showActualLengths(); render();
+    c2 = { ok:true, actual:true, msg:`Your VAD doesn’t end where it started, so the result of all the forces is NOT “nothing.” That fits the motion map: the ${sysN()}’s velocity is changing.`, pts:[] };
+  }
+  const done = c1.ok && c2.ok;
+  const row = (cls, mk, ttl, msg) => `<li class="${cls}"><span class="mk" aria-hidden="true">${mk}</span><span><span class="ttl">${ttl}</span>${msg}</span></li>`;
+  const mark = r => r.ok ? ['ok', '✓'] : r.maybe ? ['maybe', '?'] : ['no', '✗'];
+  // Richard's wording for ✓ and ✗; the "almost closed" ? and the waiting step 2 keep a neutral title.
+  let h = '<ol>' + row(...mark(c1), c1.ok ? '1. You correctly added every force head to tail' : '1. You DID NOT add every force head to tail', c1.msg);
+  h += c2 ? row(...mark(c2), c2.ok ? '2. Your VAD result is consistent with the motion'
+                             : c2.maybe ? '2. Consistent with the motion?' : '2. Your VAD result is INCONSISTENT with the motion', c2.msg)
+          : row('wait', '–', '2. Consistent with the motion', 'Fix step 1 first.');
+  h += '</ol>';
+  h += done && !sc().dv0 && sc().byo && st.placed.size > 1 ? `<div class="done good">${PK_SVG}<span>Your VAD construction is correct!</span></div><p class="actual-note">You did everything you can do with what you know so far: every force is joined head to tail, and the result is NOT “nothing,” just as the motion shows. The actual lengths would be different from yours, and you’ll learn how to find them with your next model.</p>`
+     : done && c2.actual ? `<div class="done good">${PK_SVG}<span>Your VAD construction is correct!</span></div><p class="actual-note">You did everything you can do with what you know so far: every force is joined head to tail, and the result is NOT “nothing,” just as the motion map shows. The VAD above now shows the actual lengths. The values are different from yours, and you’ll learn how to find them with your next model.</p>`
+     : done ? `<div class="done good">${PK_SVG}<span>Your VAD is correct.</span></div>`
+            : `<div class="done">Not yet. Fix the step marked above, then check again.</div>`;
+  const el = $('#check'); el.innerHTML = h; el.hidden = false;
+  st.check = { sig:placedSig(), pts:(c2 && !c2.ok ? c2.pts : c1.pts) };
+  renderVAD();
+}
+// Any change to the VAD (or scenario) makes the last check stale: clear it and its markers.
+function clearStaleCheck(){
+  if (st.check && st.check.sig !== placedSig()) { st.check = null; $('#check').hidden = true; $('#check').innerHTML = ''; }
+}
+
+/* ---------- BYO builder (setup bar + the three steps in the ID panel) ---------- */
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
+const nextLetter = name => {
+  const used = new Set(st.byo.objs.map(o => o.letter));
+  const first = (name.trim()[0] || '').toUpperCase();
+  if (/[A-Z]/.test(first) && !used.has(first)) return first;
+  return [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].find(c => !used.has(c)) || '';
+};
+function letterProblem(){
+  const all = st.byo.objs.map(o => o.letter);
+  if (all.some(l => !/^[A-Z]$/.test(l))) return 'Every object needs a one-letter label.';
+  if (new Set(all).size < all.length) return 'Two objects share a letter. Give each object its own letter.';
+  return '';
+}
+const objLabel = o => `${esc(o.name || 'Object')} (${esc(o.letter)})`;
+function renderBYOForm(){
+  const b = st.byo;
+  $('#byo-objs').innerHTML = b.objs.map(o => `<li class="byo-obj" data-uid="${o.uid}">
+      <input class="nm" type="text" value="${esc(o.name)}" maxlength="24" aria-label="Object name" placeholder="Object name">
+      <input class="byo-letter lt" type="text" value="${esc(o.letter)}" maxlength="1" aria-label="Object letter">
+      <button type="button" class="byo-x" aria-label="Remove ${esc(o.name || 'object')}" title="Remove">×</button></li>`).join('');
+  const opts = sel => b.objs.map(o => `<option value="${o.uid}"${o.uid === sel ? ' selected' : ''}>${objLabel(o)}</option>`).join('');
+  $('#byo-ints').innerHTML = b.ints.map((it, i) => `<li class="byo-pair${crossesSys(it) ? ' crossing' : ''}" data-i="${i}">
+      <select class="pa" aria-label="First object">${opts(it.a)}</select> and
+      <select class="pb" aria-label="Second object">${opts(it.b)}</select>:
+      <select class="pt" aria-label="Evidence">${EVIDENCE.map(ev => `<option${it.type === ev ? ' selected' : ''}>${ev}</option>`).join('')}</select>
+      ${crossesSys(it) && it.type === 'compression' ? `<select class="ct" aria-label="Force type">
+          ${[['N','Normal force'],['P','Push force'],['D','Drag force']].map(([t, n]) => `<option value="${t}"${(it.cType || 'N') === t ? ' selected' : ''}>${n}</option>`).join('')}</select>` : ''}
+      <button type="button" class="byo-x" aria-label="Remove interaction" title="Remove">×</button></li>`).join('');
+  $('#byo-add-int').disabled = b.objs.length < 2;
+  $('#byo-sys-pick').innerHTML = `<option value="">Choose the system…</option>` + opts(b.sys);
+  byoMarks();
+}
+function byoMarks(){
+  const all = st.byo.objs.map(o => o.letter), bad = l => !/^[A-Z]$/.test(l) || all.filter(x => x === l).length > 1;
+  document.querySelectorAll('#byo-objs .byo-obj').forEach(li => {
+    const o = st.byo.objs.find(x => x.uid === +li.dataset.uid); li.querySelector('.lt').classList.toggle('bad', !!o && bad(o.letter));
+  });
+  const crossing = st.byo.ints.filter(it => validInt(it) && crossesSys(it)).length;
+  $('#byo-warn').textContent = st.byoMsg || letterProblem() ||
+    (crossing > MAX_FORCES ? `The system has ${crossing} interactions; this tool draws the first ${MAX_FORCES} as forces.` : '');
+}
+// Any change to which forces exist (or their order) restarts the VAD; renames and letters keep it.
+let byoForceSig = '';
+function byoChanged(){
+  syncBYO();
+  const sig = BYO.forces.map(f => f.k + f.t).join('|');
+  if (sig !== byoForceSig) { byoForceSig = sig; st.placed.clear(); st.anchor = null; }
+  render(); byoMarks();
+}
+function byoSay(msg){ st.byoMsg = msg; byoMarks(); clearTimeout(byoSay.t); byoSay.t = setTimeout(() => { st.byoMsg = ''; byoMarks(); }, 4000); }
+function setSystem(uid){ st.byo.sys = uid; renderBYOForm(); byoChanged(); }
+
+document.querySelectorAll('input[name="byo-dv"]').forEach(r => r.addEventListener('change', e => { st.byo.dv0 = e.target.value === '0'; byoChanged(); }));
+$('#byo-reset').addEventListener('click', () => {
+  st.byo = byoFresh(); document.querySelector('input[name="byo-dv"][value="0"]').checked = true;
+  renderBYOForm(); byoChanged();
+});
+// Step 1: objects
+$('#byo-add').addEventListener('click', () => {
+  const o = byoObj('', nextLetter('')); o.autoLetter = o.letter; st.byo.objs.push(o);
+  renderBYOForm(); byoChanged();
+  [...document.querySelectorAll('#byo-objs .nm')].at(-1).focus();
+});
+$('#byo-objs').addEventListener('input', e => {
+  const li = e.target.closest('.byo-obj'), o = li && st.byo.objs.find(x => x.uid === +li.dataset.uid); if (!o) return;
+  if (e.target.classList.contains('nm')) {
+    const wasAuto = !o.letter || o.letter === o.autoLetter;   // a letter the tool picked follows the name until someone types one
+    o.name = e.target.value;
+    if (wasAuto) { o.letter = ''; o.letter = o.autoLetter = nextLetter(o.name); li.querySelector('.lt').value = o.letter; }
+  }
+  if (e.target.classList.contains('lt')) { e.target.value = e.target.value.toUpperCase(); o.letter = e.target.value; o.autoLetter = null; }
+  byoChanged();
+  // keep the menus in steps 2 and 3 in step with names and letters, without stealing focus
+  document.querySelectorAll(`#byo-ints option[value="${o.uid}"], #byo-sys-pick option[value="${o.uid}"]`).forEach(op => op.textContent = `${o.name || 'Object'} (${o.letter})`);
+});
+$('#byo-objs').addEventListener('click', e => {
+  const li = e.target.closest('.byo-obj'), o = li && st.byo.objs.find(x => x.uid === +li.dataset.uid);
+  if (!o || !e.target.closest('.byo-x')) return;
+  st.byo.objs = st.byo.objs.filter(x => x !== o);
+  st.byo.ints = st.byo.ints.filter(it => it.a !== o.uid && it.b !== o.uid);
+  if (st.byo.sys === o.uid) st.byo.sys = null;
+  renderBYOForm(); byoChanged();
+});
+// Step 2: interactions
+$('#byo-add-int').addEventListener('click', () => {
+  const o = st.byo.objs; if (o.length < 2) return;
+  // start with a pair that has nothing yet, when there is one
+  let a = o[0], c = o[1];
+  outer: for (const x of o) for (const y of o) if (x !== y && !st.byo.ints.some(it => [it.a, it.b].sort().join() === [x.uid, y.uid].sort().join())) { a = x; c = y; break outer; }
+  st.byo.ints.push({ uid:++byoUid, a:a.uid, b:c.uid, type: isEarth(a) || isEarth(c) ? 'field' : 'compression', cType:'N' });
+  renderBYOForm(); byoChanged();
+});
+$('#byo-ints').addEventListener('change', e => {
+  const li = e.target.closest('.byo-pair'); if (!li) return; const it = st.byo.ints[+li.dataset.i];
+  if (e.target.classList.contains('pa')) it.a = +e.target.value;
+  if (e.target.classList.contains('pb')) it.b = +e.target.value;
+  if (e.target.classList.contains('pt')) it.type = e.target.value;
+  if (e.target.classList.contains('ct')) it.cType = e.target.value;
+  if (it.a === it.b) byoSay('An interaction is between two different objects.');
+  renderBYOForm(); byoChanged();
+});
+$('#byo-ints').addEventListener('click', e => {
+  if (!e.target.closest('.byo-x')) return;
+  st.byo.ints.splice(+e.target.closest('.byo-pair').dataset.i, 1); renderBYOForm(); byoChanged();
+});
+// Step 3: the system, from the menu or by clicking its oval in the ID
+$('#byo-sys-pick').addEventListener('change', e => setSystem(e.target.value ? +e.target.value : null));
+$('#idg').addEventListener('click', e => {
+  if (!sc().byo) return;
+  const g = e.target.closest('[data-obj]'); if (g) setSystem(+g.dataset.obj.slice(1));
+});
 
 /* ---------- actions ---------- */
 // Length REF_LEN, with the middle of the arrow at the center of the grid.
@@ -1160,8 +1527,10 @@ document.querySelector('.anglebar').addEventListener('change', e => {
   renderFBD(); renderVAD();
 });
 $('#restart').addEventListener('click', () => { st.placed.clear(); render(); });
+$('#check-btn').addEventListener('click', runCheck);
 new ResizeObserver(() => renderVAD()).observe(vad);
 
+syncBYO(); byoForceSig = BYO.forces.map(f => f.k + f.t).join('|'); renderBYOForm();
 renderScenarios(); render();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
 </script>

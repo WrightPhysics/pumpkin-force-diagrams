@@ -50,6 +50,10 @@ It started as a copy of `physics-force-vad-solve` (see that repo's CLAUDE.md). T
   - The bold phrases are Richard's request (rendered with `<strong>`).
   - “nothing.” is **green** (`--good`) when it ends where it started; **NOT** “nothing.” is **red** (`--bad`) when it doesn't.
 - Students answer "Balanced or Unbalanced? How do you know?" on paper, not in the sim.
+- **Check my VAD** (`runCheck`) reports, under the grid: (1) every force, joined head to tail in one chain (`checkChain`, with specific feedback for missing forces, head-to-head, tail-to-tail, forks, loose arrows, separate chains); (2) consistent with the motion (`checkMotion`): ends where it started ⇔ the scenario's `dv0` flag (Δv = 0), with an "almost closed" ? for Δv ≠ 0 VADs whose gap is under `NEAR_TOL`; then "Your VAD is correct." with a pumpkin. Red rings mark where the problem is. The report clears as soon as the VAD changes (`clearStaleCheck`, `placedSig`).
+- The check stays inside the **balanced force particle model**: an unbalanced VAD is correct if it doesn't close. It never checks the gap's direction or the lengths of an unbalanced VAD, because that would preview the link between the result of the forces and how the velocity changes (Richard's class hasn't reached it). Hints only, no "show me the answer". **Exception (Richard's request):** when a Δv ≠ 0 VAD passes both steps, the report says "Your VAD construction is correct!" with praise for doing all the current model allows, and `showActualLengths` resizes the arrows to the actual values (scenario `mags`, in units of the weight; it keeps the student's chain order and the centered first force, shrinking the whole VAD only if it would leave the grid). The note says the values differ from theirs and they'll learn to find them with the next model. The friction values in #3 (0.3 W) and #11d (T 0.6 W, N 0.7 W, f 0.28 W) are representative, since the sketch doesn't fix them.
+- The **Check my VAD** button is full width, under the grid, with the report below it.
+- Chains are detected by `chainOrder` (tries every order of the ≤5 arrows), so a valid chain that passes back through the same point (F_gPE down, F_NPG back up to the start, then F_fPG) counts as one chain.
 
 ## Scenarios
 
@@ -58,6 +62,19 @@ Dropdown options read **"Scenario N: <worksheet sentence>"** (HTML like `<em>` i
 1. Motionless (level ground) 2. Sliding at constant velocity (smooth ground; the description deliberately does not say why friction is negligible, so students reason it out) 3. Slowing down on a rough surface 4. Sliding down a smooth hill 5. At rest on a rough hill 6. Hanging from a rope 7. Hanging by two ropes (left 30° west of north, right 30° north of east) 8. Free fall 9. At rest on a hill against a block, with a **Smooth hill / Rough hill** toggle (`vars`) 10. Pulled up over a pulley at constant velocity by the Headless Horseman 11a. Sliding up a smooth hill, slowing down 11b. Falling at constant velocity with air resistance 11c. Held at rest against a rough wall by the Horseman's push 11d. Pulled across rough ground by a rope at 30°, speeding up
 
 The Written Description is exactly the scenario sentence from the paper worksheet (the scenario `name` plus a period, with *constant* italic as on the paper); 11a–11d use their names in the same style. No extra details or hints (angles, friction, who is pushing): those come from the sketch, and students reason out friction from "smooth"/"rough" and the motion. The key line ("P = pumpkin, …") stays below it for the Type-On-By letters.
+
+## BYO Scenario (build your own, for class)
+
+**Held back on `main`:** the BYO code ships but is not added to `SCN` (the `SCN.push(BYO)` line is commented out), so it never appears in the dropdown. The working version is on the local `byo-wip` branch. Re-enable it once step 2 below is built.
+
+- The last dropdown entry, **"BYO Scenario"**: Richard describes and sketches a situation on the board, then builds its ID, FBD and VAD here. **No Written Description or Sketch panels** in BYO (`body.byo` hides them; layout "id fbd" / "vad vad").
+- The builder follows the order the ID is built on paper (Richard's request), in the ID panel (`#byo-id`): **1. Objects** (name + one-letter label, every object including the future system; letters auto-fill from the name until typed; blanks/duplicates flagged), **2. Interactions** (any two objects + evidence: field, compression, extension, shear; one involving Earth defaults to field), **3. System** (menu `#byo-sys-pick`, or click an object's oval in the ID). Only then is the boundary drawn and the crossing interactions become forces; a crossing compression interaction then offers Normal / Push / Drag force. Before a system is chosen the ID shows every object on a ring (Earth at the bottom), all interactions gray, and the FBD says to choose the system.
+- The top bar (`#byo-bar`) holds only Motion (Δv = 0 or Δv ≠ 0, sets `dv0` for the check) and Start over (back to just Earth (E)).
+- `st.byo` = { objs, ints, sys, dv0, dirs }; `syncBYO()` rewrites the `BYO` scenario object (forces, id layout, key, dv0) so the ID, FBD, force key, VAD and Check work unchanged. Forces: field → g, extension → T, shear → f, compression → the chosen N/P/D; at most `MAX_FORCES` = 5 (one color each; extras are left out with a warning). Layout with a system: system in the middle, Earth straight below, the others over the top of a ring.
+- Any change to which forces exist restarts the VAD (`byoChanged`, `byoForceSig`); renames and letter changes keep it.
+- Messages use the system's name (`sysN()`): "the result of all the forces exerted on the sled".
+- Check: no actual-length reveal in BYO (no `mags`). A correct Δv ≠ 0 VAD with 2+ forces gets "Your VAD construction is correct!" and a note that the actual lengths would differ.
+- **Not built yet (step 2):** setting each force's direction by dragging its tip on the FBD (snap every 15°, with an angle readout). Until then forces use default directions (`DEF_ANG`).
 
 ## Notation
 
@@ -81,6 +98,8 @@ The Written Description is exactly the scenario sentence from the paper workshee
 ## Interaction diagrams, FBD, VAD, labels, arrows
 
 Same rules as `physics-force-vad-solve`, except the ID evidence words are **field, compression, extension, shear** ("extension", never "stretch"): curved double-headed interactions, crossing interactions colored by their force, negligible interactions left out, `wright vector` arrowheads at `HEAD_SCALE = 0.6`, collision-aware labels (`makePlacer`), direction-locked VAD arrows that snap head-to-tail.
+
+ID interactions end in a short **straight run perpendicular to each oval** (`stub`, longer than the arrowhead) before the curve begins, so each arrowhead sits on a straight line; a curve that is only perpendicular at its last pixel can blend into one barb (Richard spotted this). Labels avoid the arrowheads (`blobs`).
 
 ID addition: scenarios with a rope (#6, #7, #10, #11d) show a note under the ID explaining there is no Earth–rope field interaction because ropes are treated as "massless" for now (`#rope-note`, shown when any ID object's name contains "rope").
 
